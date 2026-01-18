@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "sources/zh.mxshm"
+]
+
+resolver = "2"
