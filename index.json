@@ -1,0 +1,17 @@
+{
+  "name": "Wilkques Sources",
+  "sources": [
+    {
+      "id": "zh.mxshm",
+      "name": "漫小肆韩漫",
+      "version": 2,
+      "iconURL": "icons/zh.mxshm-v2.png",
+      "downloadURL": "sources/zh.mxshm-v2.aix",
+      "languages": [
+        "zh"
+      ],
+      "contentRating": 2,
+      "baseURL": "https://www.mxs10.cc"
+    }
+  ]
+}
