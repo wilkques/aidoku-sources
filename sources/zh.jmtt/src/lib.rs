@@ -7,8 +7,9 @@ mod settings;
 mod url;
 
 use aidoku::{
-    BaseUrlProvider, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, Manga, MangaPageResult,
+    BaseUrlProvider, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, Manga, MangaPageResult, PageImageProcessor,
     Page, Result, Source,
+    imports::canvas::ImageRef,
     alloc::{String, Vec, string::ToString as _},
     prelude::*,
 };
@@ -89,7 +90,46 @@ impl BaseUrlProvider for Jmtt {
     }
 }
 
-register_source!(Jmtt, DeepLinkHandler, BaseUrlProvider);
+impl PageImageProcessor for Jmtt {
+    fn process_page_image(
+            &self,
+            response: aidoku::ImageResponse,
+            context: Option<aidoku::PageContext>,
+    ) -> Result<ImageRef> {
+        let Some(context) = context else {
+            return Ok(response.image);
+        };
+
+        let Some(key) = context.get("key") else {
+            bail!("Missing encryption key");
+        };
+
+        let data = response.image.data();
+
+        let key_stream: core::result::Result<Vec<u8>, core::num::ParseIntError> = key
+            .as_bytes()
+            .chunks(2)
+            .map(|chunk| {
+                let s = core::str::from_utf8(chunk).unwrap();
+                u8::from_str_radix(s, 16)
+            })
+            .collect();
+
+        let Ok(key_stream) = key_stream else {
+            bail!("Invalid encryption key");
+        };
+
+        let decoded: Vec<u8> = data
+            .iter()
+            .enumerate()
+            .map(|(i, &byte)| byte ^ key_stream[i % key_stream.len()])
+            .collect();
+
+        Ok(ImageRef::new(&decoded))
+    }
+}
+
+register_source!(Jmtt, DeepLinkHandler, BaseUrlProvider, PageImageProcessor);
 
 #[cfg(test)]
 mod test;
