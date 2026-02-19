@@ -1,7 +1,7 @@
 #![expect(clippy::unwrap_used)]
 
-use super::*;
-use aidoku_test::aidoku_test;
+// use super::*;
+// use aidoku_test::aidoku_test;
 
 // #[aidoku_test]
 // fn test_get_search_manga_list() {
@@ -58,30 +58,30 @@ use aidoku_test::aidoku_test;
 //     panic!("完整結果: {:#?}", result);
 // }
 
-#[aidoku_test]
-fn test_get_page_list() {
-    let source = Jmtt::new();
+// #[aidoku_test]
+// fn test_get_page_list() {
+//     let source = Jmtt::new();
 
-    let manga = Manga {
-        key: "1111972".to_string(),
-        title: "与初恋的意外同居 / 與初戀的意外同居".to_string(),
-        cover: Some("https://cdn-msp3.18comic.vip/media/albums/1111972_3x4.jpg?u=1771167758".to_string()),
-        ..Default::default()
-    };
+//     let manga = Manga {
+//         key: "1111972".to_string(),
+//         title: "与初恋的意外同居 / 與初戀的意外同居".to_string(),
+//         cover: Some("https://cdn-msp3.18comic.vip/media/albums/1111972_3x4.jpg?u=1771167758".to_string()),
+//         ..Default::default()
+//     };
 
-    let chapter = Chapter {
-        key: "1111972".to_string(),
-        title: Some("第1話".to_string()),
-        chapter_number: Some(1.0),
-        ..Default::default()
-    };
+//     let chapter = Chapter {
+//         key: "1111972".to_string(),
+//         title: Some("第1話".to_string()),
+//         chapter_number: Some(1.0),
+//         ..Default::default()
+//     };
 
-    let result = source
-        .get_page_list(manga, chapter)
-        .unwrap();
+//     let result = source
+//         .get_page_list(manga, chapter)
+//         .unwrap();
 
-    panic!("完整結果: {:#?}", result);
-}
+//     panic!("完整結果: {:#?}", result);
+// }
 
 // #[aidoku_test]
 // fn test_handle_deep_link() {
