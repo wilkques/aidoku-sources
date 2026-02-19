@@ -153,22 +153,49 @@ impl GenManga for Document {
         let mut pages: Vec<Page> = Vec::new();
 
         let items = self
-            .select("div.center.scramble-page.spnotice_chk > img")
-            .ok_or_else(|| error!("No chapter img found"))?;
+            .select("div.center.scramble-page.spnotice_chk")
+            .ok_or_else(|| error!("No chapter list found"))?;
 
         for item in items {
-            let href = item.attr("data-original").unwrap_or_default();
+            // 2. 從容器中找圖片
+            let img_node = match item.select_first("img") {
+                Some(node) => node,
+                None => continue,
+            };
 
-            if href.is_empty() {
+            // 優先抓 data-original，沒有才抓 src
+            let mut url = img_node.attr("data-original").unwrap_or_default().trim().to_string();
+            if url.is_empty() {
+                url = img_node.attr("src").unwrap_or_default().trim().to_string();
+            }
+
+            // 過濾掉空白防呆圖或空網址
+            if url.is_empty() || url.contains("blank.jpg") {
                 continue;
             }
 
-            let url = href.trim().to_string();
+            // 3. 從同一個容器中找 canvas 的拼圖資料 (允許找不到，因為第 69 頁後可能沒有)
+            let canvas_data = item
+                .select_first("canvas")
+                .map(|n| n.attr("data").unwrap_or_default().trim().to_string())
+                .unwrap_or_default();
 
+            // 4. 判斷是否需要解碼，並生成對應的 PageContent
+            let content = if canvas_data.is_empty() {
+                // 沒有 canvas，這是一般圖片 (例如章節後半段)
+                PageContent::url(url)
+            } else {
+                // 有 canvas，把資料塞進 Context 給 Processor 處理
+                let mut ctx = aidoku::HashMap::new();
+                ctx.insert(String::from("canvas_data"), canvas_data);
+                PageContent::url_context(url, ctx)
+            };
+
+            // 5. 存入 pages
             pages.push(Page {
-                content: PageContent::url(url),
+                content,
                 ..Default::default()
-            })
+            });
         }
 
         Ok(pages)
