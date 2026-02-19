@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "sources/zh.mxshm"
+    "sources/zh.mxshm",
+    "sources/zh.jmtt"
 ]
 
 resolver = "2"

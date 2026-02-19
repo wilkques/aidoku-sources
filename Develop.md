@@ -3,7 +3,15 @@
 ```
 docker build -t aidoku-rs .
 
-docker run -d -it --rm -v $(pwd)/../:/usr/src/app -w /usr/src/app aidoku-rs
+docker run -d -it --rm \
+--name aidoku-rs \
+-v $(pwd)/../:/usr/src/app \
+-v /etc/localtime:/etc/localtime:ro \
+-v /etc/timezone:/etc/timezone:ro \
+-w /usr/src/app \
+aidoku-rs
+
+docker exec -it <Container ID> /bin/sh
 
 rustup target add wasm32-unknown-unknown
 ```
@@ -14,6 +22,12 @@ cd /<document_root>/sources/<source name>
 
 # run test
 cargo test
+
+# or
+cargo test --release
+
+#or
+cargo test -- --nocapture
 ```
 
 ## deployment

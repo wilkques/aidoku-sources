@@ -1,0 +1,24 @@
+{
+  "info": {
+    "id": "zh.jmtt",
+    "name": "禁漫天堂",
+    "version": 1,
+    "urls": [
+      "https://18comic.vip",
+      "https://18comic.ink",
+      "https://jmcomic-zzz.one",
+      "https://jmcomic-zzz.org",
+      "https://jm18c-tdc.club",
+      "https://jm18c-uoi.net",
+      "https://jm18c-tdc.net"
+    ],
+    "contentRating": 1,
+    "languages": ["zh"]
+  },
+	"config": {
+		"allowsBaseUrlSelect": true,
+		"hidesFiltersWhileSearching": true,
+		"supportsAuthorSearch": true,
+		"supportsTagSearch": true
+	}
+}
