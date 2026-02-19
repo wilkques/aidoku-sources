@@ -47,7 +47,7 @@ docker command
 # stop
 docker ps -a
 
-docker stop <Container ID>
+docker stop <Container ID/name>
 
-docker rm <Container ID>
+docker rm <Container ID/name>
 ```
