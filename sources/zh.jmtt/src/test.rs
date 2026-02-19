@@ -1,7 +1,7 @@
 #![expect(clippy::unwrap_used)]
 
-// use super::*;
-// use aidoku_test::aidoku_test;
+use super::*;
+use aidoku_test::aidoku_test;
 
 // #[aidoku_test]
 // fn test_get_search_manga_list() {
@@ -94,3 +94,34 @@
 
 //     panic!("✅ 成功解析 DeepLink: {:?}", result);
 // }
+
+#[aidoku_test]
+fn test_decode_jm_canvas_data() {
+    // 這是從你提供的網頁 HTML 中複製下來的真實 canvas data
+    let raw_base64 = "eyJ1cmwiOiJodHRwczovL2Nkbi1tc3AyLjE4Y29taWMudmlwL21lZGlhL3Bob3Rvcy8xMTExOTcyLzAwMDAxLndlYnA/cGM9MTc3MDAwNDAzMCIsImFyZ3MiOltbMCw0MTUsNzIwLDg1LDAsMCw3MjAsODVdLFswLDMzMiw3MjAsODMsMCw4NSw3MjAsODNdLFswLDI0OSw3MjAsODMsMCwxNjgsNzIwLDgzXSxbMCwxNjYsNzIwLDgzLDAsMjUxLDcyMCw4M10sWzAsODMsNzIwLDgzLDAsMzM0LDcyMCw4M10sWzAsMCw3MjAsODMsMCw0MTcsNzIwLDgzXV0sIndpZHRoIjo3MjAsImhlaWdodCI6NTAwfQ==";
+
+    // 執行解析
+    let result = decode_jm_canvas_data(raw_base64).expect("解碼與解析應該要成功");
+
+    // 1. 驗證寬高是否正確 (從你給的 HTML 可知是 720x500)
+    assert_eq!(result.width, 720.0);
+    assert_eq!(result.height, 500.0);
+
+    // 2. 驗證切割區塊數量 (這張圖被切成了 6 塊)
+    assert_eq!(result.args.len(), 6);
+
+    // 3. 驗證第一塊的座標是否完全符合 [0, 415, 720, 85, 0, 0, 720, 85]
+    let first_arg = result.args[0];
+    assert_eq!(first_arg, [0.0, 415.0, 720.0, 85.0, 0.0, 0.0, 720.0, 85.0]);
+
+    // 4. 驗證最後一塊的座標 [0, 0, 720, 83, 0, 417, 720, 83]
+    let last_arg = result.args[5];
+    assert_eq!(last_arg, [0.0, 0.0, 720.0, 83.0, 0.0, 417.0, 720.0, 83.0]);
+}
+
+#[aidoku_test]
+fn test_invalid_base64() {
+    // 驗證給予錯誤資料時不會崩潰，而是回傳 None
+    let result = decode_jm_canvas_data("這不是正確的Base64");
+    assert_eq!(result, None);
+}

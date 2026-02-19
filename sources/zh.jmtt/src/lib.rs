@@ -5,16 +5,18 @@ mod fetch;
 mod html;
 mod settings;
 mod url;
+mod canvas;
 
 use aidoku::{
-    BaseUrlProvider, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, Manga, MangaPageResult, PageImageProcessor,
-    Page, Result, Source,
-    imports::canvas::ImageRef,
-    alloc::{String, Vec, string::ToString as _},
-    prelude::*,
+    BaseUrlProvider, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, ImageResponse, Manga, MangaPageResult, Page, PageContext, 
+    PageImageProcessor, Result, Source, 
+    alloc::{String, Vec, string::ToString as _}, 
+    canvas::Rect, 
+    imports::canvas::{Canvas, ImageRef}, 
+    prelude::*
 };
 
-use crate::fetch::Fetch;
+use crate::{canvas::decode_jm_canvas_data, fetch::Fetch};
 use crate::html::GenManga;
 use crate::url::Url;
 
@@ -93,39 +95,36 @@ impl BaseUrlProvider for Jmtt {
 impl PageImageProcessor for Jmtt {
     fn process_page_image(
             &self,
-            response: aidoku::ImageResponse,
-            context: Option<aidoku::PageContext>,
+            response: ImageResponse,
+            context: Option<PageContext>,
     ) -> Result<ImageRef> {
-        let Some(context) = context else {
+        let context = match context {
+            Some(ctx) => ctx,
+            None => return Ok(response.image),
+        };
+
+        let canvas_data_b64 = context.get("canvas_data").cloned().unwrap_or_default();
+        if canvas_data_b64.is_empty() {
             return Ok(response.image);
+        }
+
+        // 呼叫我們的純函式進行解析
+        let scramble_data = match decode_jm_canvas_data(&canvas_data_b64) {
+            Some(data) => data,
+            None => return Ok(response.image), // 解析失敗就回傳原圖
         };
 
-        let Some(key) = context.get("key") else {
-            bail!("Missing encryption key");
-        };
+        // 直接使用解析出來的寬高建立畫布
+        let mut canvas = Canvas::new(scramble_data.width, scramble_data.height);
 
-        let data = response.image.data();
+        // 走訪座標進行拼貼
+        for arg in scramble_data.args {
+            let src_rect = Rect::new(arg[0], arg[1], arg[2], arg[3]);
+            let des_rect = Rect::new(arg[4], arg[5], arg[6], arg[7]);
+            canvas.copy_image(&response.image, src_rect, des_rect);
+        }
 
-        let key_stream: core::result::Result<Vec<u8>, core::num::ParseIntError> = key
-            .as_bytes()
-            .chunks(2)
-            .map(|chunk| {
-                let s = core::str::from_utf8(chunk).unwrap();
-                u8::from_str_radix(s, 16)
-            })
-            .collect();
-
-        let Ok(key_stream) = key_stream else {
-            bail!("Invalid encryption key");
-        };
-
-        let decoded: Vec<u8> = data
-            .iter()
-            .enumerate()
-            .map(|(i, &byte)| byte ^ key_stream[i % key_stream.len()])
-            .collect();
-
-        Ok(ImageRef::new(&decoded))
+        Ok(canvas.get_image())
     }
 }
 

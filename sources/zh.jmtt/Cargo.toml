@@ -5,6 +5,8 @@ edition = "2024"
 
 [dependencies]
 aidoku = { git = "https://github.com/Aidoku/aidoku-rs.git", features = ["helpers"] }
+base64 = { version = "0.21.1", default-features = false, features = ["alloc"] }
+serde = { version = "1.0.188", default-features = false, features = ["derive", "alloc"] }
 
 [dev-dependencies]
 aidoku = { git = "https://github.com/Aidoku/aidoku-rs.git", features = ["test"] }
