@@ -5,7 +5,6 @@ mod fetch;
 mod html;
 mod settings;
 mod url;
-mod canvas;
 
 use aidoku::{
     BaseUrlProvider, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, ImageResponse, Manga, MangaPageResult, Page, PageContext, 
@@ -16,7 +15,9 @@ use aidoku::{
     prelude::*
 };
 
-use crate::{canvas::decode_jm_canvas_data, fetch::Fetch};
+use base64::{engine::general_purpose, Engine};
+
+use crate::fetch::Fetch;
 use crate::html::GenManga;
 use crate::url::Url;
 
@@ -98,32 +99,70 @@ impl PageImageProcessor for Jmtt {
             response: ImageResponse,
             context: Option<PageContext>,
     ) -> Result<ImageRef> {
+        // 1. 取出 Context
         let context = match context {
             Some(ctx) => ctx,
             None => return Ok(response.image),
         };
 
-        let canvas_data_b64 = context.get("canvas_data").cloned().unwrap_or_default();
-        if canvas_data_b64.is_empty() {
+        // 2. 取出 Base64 字串
+        let canvas_data_b64 = match context.get("canvas_data") {
+            Some(data) if !data.is_empty() => data,
+            _ => return Ok(response.image),
+        };
+
+        // 3. 解碼 Base64
+        let decoded_bytes = match general_purpose::STANDARD.decode(canvas_data_b64) {
+            Ok(b) => b,
+            Err(_) => return Ok(response.image),
+        };
+        let json_str = String::from_utf8(decoded_bytes).unwrap_or_default();
+
+        // 4. 手動字串解析 JSON (不依賴任何外部 JSON 套件，效能最高！)
+        // JSON 範例: {"url":"...","args":[[0,415,720,85,0,0,720,85],...],"width":720,"height":500}
+        
+        // 擷取 width
+        let width: f32 = json_str.split("\"width\":")
+            .nth(1).unwrap_or("0")
+            .split(',')
+            .next().unwrap_or("0")
+            .trim().parse().unwrap_or(0.0);
+
+        // 擷取 height
+        let height: f32 = json_str.split("\"height\":")
+            .nth(1).unwrap_or("0")
+            .split('}')
+            .next().unwrap_or("0")
+            .trim().parse().unwrap_or(0.0);
+
+        // 如果解析失敗，直接回傳原圖
+        if width == 0.0 || height == 0.0 {
             return Ok(response.image);
         }
 
-        // 呼叫我們的純函式進行解析
-        let scramble_data = match decode_jm_canvas_data(&canvas_data_b64) {
-            Some(data) => data,
-            None => return Ok(response.image), // 解析失敗就回傳原圖
-        };
+        // 5. 建立畫布準備拼圖
+        let mut canvas = Canvas::new(width, height);
 
-        // 直接使用解析出來的寬高建立畫布
-        let mut canvas = Canvas::new(scramble_data.width, scramble_data.height);
+        // 6. 擷取 args 陣列並拼圖
+        if let Some(args_part) = json_str.split("\"args\":[").nth(1).and_then(|s| s.split("],\"").next()) {
+            // 迴圈走訪每個區塊，例如: 0,415,720,85,0,0,720,85
+            for arg_group in args_part.split("],[") {
+                let clean_group = arg_group.replace('[', "").replace(']', "");
+                let nums: Vec<f32> = clean_group
+                    .split(',')
+                    .filter_map(|s| s.trim().parse().ok())
+                    .collect();
 
-        // 走訪座標進行拼貼
-        for arg in scramble_data.args {
-            let src_rect = Rect::new(arg[0], arg[1], arg[2], arg[3]);
-            let des_rect = Rect::new(arg[4], arg[5], arg[6], arg[7]);
-            canvas.copy_image(&response.image, src_rect, des_rect);
+                // 確保座標數量正確 (來源 x,y,w,h 與 目標 x,y,w,h)
+                if nums.len() >= 8 {
+                    let src_rect = Rect::new(nums[0], nums[1], nums[2], nums[3]);
+                    let des_rect = Rect::new(nums[4], nums[5], nums[6], nums[7]);
+                    canvas.copy_image(&response.image, src_rect, des_rect);
+                }
+            }
         }
 
+        // 7. 回傳拼好的圖片
         Ok(canvas.get_image())
     }
 }

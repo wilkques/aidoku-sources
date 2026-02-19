@@ -1,7 +1,7 @@
 #![expect(clippy::unwrap_used)]
 
-use super::*;
-use aidoku_test::aidoku_test;
+// use super::*;
+// use aidoku_test::aidoku_test;
 
 // #[aidoku_test]
 // fn test_get_search_manga_list() {
