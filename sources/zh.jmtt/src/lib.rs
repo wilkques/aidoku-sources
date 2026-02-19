@@ -99,70 +99,61 @@ impl PageImageProcessor for Jmtt {
             response: ImageResponse,
             context: Option<PageContext>,
     ) -> Result<ImageRef> {
-        // 1. 取出 Context
         let context = match context {
             Some(ctx) => ctx,
             None => return Ok(response.image),
         };
 
-        // 2. 取出 Base64 字串
         let canvas_data_b64 = match context.get("canvas_data") {
             Some(data) if !data.is_empty() => data,
             _ => return Ok(response.image),
         };
 
-        // 3. 解碼 Base64
         let decoded_bytes = match general_purpose::STANDARD.decode(canvas_data_b64) {
             Ok(b) => b,
             Err(_) => return Ok(response.image),
         };
         let json_str = String::from_utf8(decoded_bytes).unwrap_or_default();
 
-        // 4. 手動字串解析 JSON (不依賴任何外部 JSON 套件，效能最高！)
-        // JSON 範例: {"url":"...","args":[[0,415,720,85,0,0,720,85],...],"width":720,"height":500}
-        
-        // 擷取 width
-        let width: f32 = json_str.split("\"width\":")
-            .nth(1).unwrap_or("0")
-            .split(',')
-            .next().unwrap_or("0")
-            .trim().parse().unwrap_or(0.0);
+        // 🔑 暴力堅固的數字萃取器：自動把 "720}" 變成 720.0
+        let extract_f32 = |s: &str| -> f32 {
+            let clean: String = s.chars().filter(|c| c.is_ascii_digit() || *c == '.').collect();
+            clean.parse().unwrap_or(0.0)
+        };
 
-        // 擷取 height
-        let height: f32 = json_str.split("\"height\":")
-            .nth(1).unwrap_or("0")
-            .split('}')
-            .next().unwrap_or("0")
-            .trim().parse().unwrap_or(0.0);
+        // 讀取寬高
+        let w_part = json_str.split("\"width\":").nth(1).unwrap_or("0");
+        let width = extract_f32(w_part.split(',').next().unwrap_or("0"));
 
-        // 如果解析失敗，直接回傳原圖
+        let h_part = json_str.split("\"height\":").nth(1).unwrap_or("0");
+        let height = extract_f32(h_part.split(',').next().unwrap_or("0").split('}').next().unwrap_or("0"));
+
         if width == 0.0 || height == 0.0 {
             return Ok(response.image);
         }
 
-        // 5. 建立畫布準備拼圖
+        // 建立畫布
         let mut canvas = Canvas::new(width, height);
 
-        // 6. 擷取 args 陣列並拼圖
-        if let Some(args_part) = json_str.split("\"args\":[").nth(1).and_then(|s| s.split("],\"").next()) {
-            // 迴圈走訪每個區塊，例如: 0,415,720,85,0,0,720,85
-            for arg_group in args_part.split("],[") {
-                let clean_group = arg_group.replace('[', "").replace(']', "");
-                let nums: Vec<f32> = clean_group
-                    .split(',')
-                    .filter_map(|s| s.trim().parse().ok())
-                    .collect();
+        // 🔑 暴力抓取所有陣列座標：無視任何格式，直接把數字通通抓出來排好
+        let args_str = json_str.split("\"args\":").nth(1).unwrap_or("");
+        let args_array_str = args_str.split("],\"").next().unwrap_or(args_str);
+        
+        let clean_args = args_array_str.replace('[', "").replace(']', "");
+        let nums: Vec<f32> = clean_args
+            .split(',')
+            .filter_map(|s| s.trim().parse::<f32>().ok())
+            .collect();
 
-                // 確保座標數量正確 (來源 x,y,w,h 與 目標 x,y,w,h)
-                if nums.len() >= 8 {
-                    let src_rect = Rect::new(nums[0], nums[1], nums[2], nums[3]);
-                    let des_rect = Rect::new(nums[4], nums[5], nums[6], nums[7]);
-                    canvas.copy_image(&response.image, src_rect, des_rect);
-                }
+        // 每次取 8 個數字一組 (來源 x,y,w,h + 目標 x,y,w,h) 來拼圖
+        for chunk in nums.chunks(8) {
+            if chunk.len() == 8 {
+                let src_rect = Rect::new(chunk[0], chunk[1], chunk[2], chunk[3]);
+                let des_rect = Rect::new(chunk[4], chunk[5], chunk[6], chunk[7]);
+                canvas.copy_image(&response.image, src_rect, des_rect);
             }
         }
 
-        // 7. 回傳拼好的圖片
         Ok(canvas.get_image())
     }
 }
