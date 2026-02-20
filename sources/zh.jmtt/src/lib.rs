@@ -126,10 +126,10 @@ impl PageImageProcessor for Jmtt {
         let mut canvas = Canvas::new(width, height as f32);
 
         let remainder = height % pieces;
-        let slice_height = height / pieces;
 
         // JS loop port
         for i in 0..pieces {
+            let slice_height = height / pieces;
             let mut h = slice_height;
             // In JS: var srcY = h * m; var dstY = height - h * (m+1) - remainder;
             // However, in JS they do ctx.drawImage(e, 0, dstY, w, h, 0, srcY, w, h)
