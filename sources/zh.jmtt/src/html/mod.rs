@@ -14,13 +14,13 @@ use aidoku::{
     prelude::*,
 };
 
-use crate::{ image::{ clean_img_filename, extract_js_config, get_pieces_num }, url::Url };
+use crate::{ image::{ extract_js_config, get_pieces_num }, url::Url };
 
 pub trait GenManga {
     fn list(&self) -> Result<MangaPageResult>;
     fn detail(&self, manga: &mut Manga) -> Result<()>;
     fn chapters(&self) -> Result<Vec<Chapter>>;
-    fn chapter(&self) -> Result<Vec<Page>>;
+    fn chapter(&self, chapter_key: &str) -> Result<Vec<Page>>;
 }
 
 impl GenManga for Document {
@@ -101,13 +101,13 @@ impl GenManga for Document {
 
         let is_completed = manga.tags
             .as_ref()
-            .map_or(false, |tags| { tags.iter().any(|t| (t == "完結" || t == "完结")) });
+            .map_or(false, |tags| { tags.iter().any(|t| t == "完結" || t == "完结") });
 
         manga.status = if is_completed { MangaStatus::Completed } else { MangaStatus::Ongoing };
 
         let is_webtoon = manga.tags
             .as_ref()
-            .map_or(false, |tags| { tags.iter().any(|t| (t == "韓漫" || t == "韩漫")) });
+            .map_or(false, |tags| { tags.iter().any(|t| t == "韓漫" || t == "韩漫") });
 
         manga.viewer = if is_webtoon { Viewer::Webtoon } else { Viewer::LeftToRight };
 
@@ -160,23 +160,29 @@ impl GenManga for Document {
         Ok(chapters)
     }
 
-    fn chapter(&self) -> Result<Vec<Page>> {
+    fn chapter(&self, chapter_key: &str) -> Result<Vec<Page>> {
         let mut pages: Vec<Page> = Vec::new();
+        let mut aid = chapter_key.to_string();
 
-        // 從頁面 JS 的 infiniteScrollConfig 中取得當前章節的 aid（用於計算圖片切片數）
-        let aid = self
-            .select("script")
-            .into_iter()
-            .flatten()
-            .find_map(|node| {
-                let text = node.text().unwrap_or_default();
-                if text.contains("infiniteScrollConfig") {
-                    extract_js_config(&text, "currentAid").map(|s| s.to_string())
-                } else {
-                    None
-                }
-            })
-            .unwrap_or_default();
+        // 嘗試從頁面 JS 的 infiniteScrollConfig 取得當前章節的 aid 作為雙重保險
+        if
+            let Some(script_aid) = self
+                .select("script")
+                .into_iter()
+                .flatten()
+                .find_map(|node| {
+                    let text = node.text().unwrap_or_default();
+                    if text.contains("infiniteScrollConfig") {
+                        extract_js_config(&text, "currentAid").map(|s| s.to_string())
+                    } else {
+                        None
+                    }
+                })
+        {
+            if !script_aid.is_empty() {
+                aid = script_aid;
+            }
+        }
 
         let items = self
             .select("div.center.scramble-page.spnotice_chk > img")
@@ -189,11 +195,22 @@ impl GenManga for Document {
 
             // 判斷是否為 WebP 混淆圖片，若是則計算切片數並透過 PageContext 傳遞
             if original_url.contains(".webp") {
-                // JS: var num = get_num(btoa(aid), btoa(img.id.split(".")[0]));
-                // img.id 是 HTML 元素的 id 屬性（如 album_photo_00249）
-                let img_id = item.attr("id").unwrap_or_default().trim().to_string();
-                let img_id_no_ext = img_id.split('.').next().unwrap_or(&img_id);
-                let pieces = get_pieces_num(&aid, img_id_no_ext);
+                // JS 傳給 get_num 的 t (parentId) 為純檔案名稱數字，例如：
+                // e.id: "album_photo_00005.webp"
+                // parentId (t): "00005"
+                let mut img_id = item.attr("id").unwrap_or_default().trim().to_string();
+
+                // 1. 去掉 .webp 副檔名
+                if let Some(pos) = img_id.find('.') {
+                    img_id.truncate(pos);
+                }
+
+                // 2. 去掉 album_photo_ 或類似的前綴字串，只留數字
+                if let Some(last_index) = img_id.rfind('_') {
+                    img_id = img_id[last_index + 1..].to_string();
+                }
+
+                let pieces = get_pieces_num(&aid, &img_id);
 
                 // 透過 PageContext (HashMap) 傳遞 pieces，不污染圖片 URL
                 let mut ctx: PageContext = HashMap::new();

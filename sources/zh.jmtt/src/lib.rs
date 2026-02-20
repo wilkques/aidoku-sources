@@ -29,7 +29,7 @@ use aidoku::{
     prelude::*,
 };
 
-use crate::fetch::{Client, Fetch};
+use crate::fetch::{ Client, Fetch };
 use crate::html::GenManga;
 use crate::url::Url;
 
@@ -76,10 +76,9 @@ impl Source for Jmtt {
 
     fn get_page_list(&self, _: Manga, chapter: Chapter) -> Result<Vec<Page>> {
         let url = Url::chapter(chapter.key.clone())?.to_string();
-
         let response = Fetch::get(url)?.get_html()?;
 
-        GenManga::chapter(&response)
+        GenManga::chapter(&response, &chapter.key)
     }
 }
 
@@ -122,8 +121,8 @@ impl PageImageProcessor for Jmtt {
         }
 
         let image = &response.image;
-        let width  = image.width();   // JS: var width = img.naturalWidth;
-        let height = image.height() as u32;  // JS: var height = img.naturalHeight;
+        let width = image.width(); // JS: var width = img.naturalWidth;
+        let height = image.height() as u32; // JS: var height = img.naturalHeight;
 
         let mut canvas = Canvas::new(width, height as f32);
 
@@ -131,26 +130,22 @@ impl PageImageProcessor for Jmtt {
 
         // JS loop port
         for i in 0..pieces {
-            let slice_height = height / pieces;
-            let mut h = slice_height;
-            // In JS: var srcY = h * m; var dstY = height - h * (m+1) - remainder;
-            // However, in JS they do ctx.drawImage(e, 0, dstY, w, h, 0, srcY, w, h)
-            // Which means `dstY` is the SOURCE Y coordinate, and `srcY` is the DESTINATION Y.
-            let mut dest_y = h * i;
-            let src_y = height - h * (i + 1) - remainder;
+            let mut slice_height = height / pieces;
+            let mut src_y = slice_height * i;
+            let dest_y = height - slice_height * (i + 1) - remainder;
 
             if i == 0 {
-                h += remainder;
+                slice_height += remainder;
             } else {
-                dest_y += remainder;
+                src_y += remainder;
             }
 
             // Copy the strip from source to destination
             // Aidoku copy_image(image, src_rect, dest_rect)
             canvas.copy_image(
                 image,
-                Rect::new(0.0, src_y as f32, width, h as f32), // src_rect: 從打亂圖抓取
-                Rect::new(0.0, dest_y as f32, width, h as f32), // dst_rect: 覆寫回預期正確位置
+                Rect::new(0.0, dest_y as f32, width, slice_height as f32), // src_rect: 從打亂圖抓取
+                Rect::new(0.0, src_y as f32, width, slice_height as f32) // dst_rect: 覆寫回預期正確位置
             );
         }
 
@@ -158,9 +153,8 @@ impl PageImageProcessor for Jmtt {
     }
 }
 
-
 impl ImageRequestProvider for Jmtt {
-    fn get_image_request(&self, url: String, _context: Option<PageContext>) -> Result<Request> {        
+    fn get_image_request(&self, url: String, _context: Option<PageContext>) -> Result<Request> {
         Ok(Client::get(url)?)
     }
 }

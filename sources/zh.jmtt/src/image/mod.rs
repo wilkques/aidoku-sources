@@ -1,38 +1,38 @@
-use aidoku::{ alloc::{ String, string::ToString as _ }, prelude::* };
-use base64::{ engine::general_purpose, Engine };
-use md5::{Md5, Digest};
+use aidoku::{
+    // alloc::{ String, string::ToString as _ },
+    prelude::*,
+};
+use md5::{ Md5, Digest };
 
 /// 清理圖片檔名，處理含有 `next_` 前綴的情況
 ///
 /// 例如：`next_12345.webp?pc=xxx` → `12345`
-pub fn clean_img_filename(raw_filename: &str) -> String {
-    // 去掉 query string（? 之後的部分）
-    let without_query = raw_filename.split('?').next().unwrap_or(raw_filename);
-    // 去掉副檔名（. 之後的部分）
-    let name_without_ext = without_query.split('.').next().unwrap_or(without_query);
+// pub fn clean_img_filename(raw_filename: &str) -> String {
+//     // 去掉 query string（? 之後的部分）
+//     let without_query = raw_filename.split('?').next().unwrap_or(raw_filename);
+//     // 去掉副檔名（. 之後的部分）
+//     let name_without_ext = without_query.split('.').next().unwrap_or(without_query);
 
-    // 若包含 "next"，取底線分隔後的最後一段作為真實 ID
-    if name_without_ext.contains("next") {
-        if let Some(last_part) = name_without_ext.split('_').last() {
-            return last_part.to_string();
-        }
-    }
+//     // 若包含 "next"，取底線分隔後的最後一段作為真實 ID
+//     if name_without_ext.contains("next") {
+//         if let Some(last_part) = name_without_ext.split('_').last() {
+//             return last_part.to_string();
+//         }
+//     }
 
-    name_without_ext.to_string()
-}
+//     name_without_ext.to_string()
+// }
 
 /// Computes the number of slices for the image.
-/// This ports the `get_num` JS function.
+/// This ports the `get_num` JS function exactly.
 pub fn get_pieces_num(aid_str: &str, image_id: &str) -> u32 {
-    // In the JS: e = atob(btoa(aid)), t = atob(btoa(image_id)). This is basically just the string.
-    // The JS does this: md5(e + t).substr(-1).charCodeAt()
     let combined = format!("{}{}", aid_str, image_id);
-    
+
     // Calculate MD5 hash
     let mut hasher = Md5::new();
     hasher.update(combined.as_bytes());
     let hash_result = hasher.finalize();
-    
+
     // Convert to hex string manually to get exactly what JS gets
     let hash_hex = format!("{:x}", hash_result);
     // Get last char
@@ -40,16 +40,16 @@ pub fn get_pieces_num(aid_str: &str, image_id: &str) -> u32 {
     // Get its character code
     let char_code = last_char as u32;
 
-    let e_int = aid_str.parse::<u32>().unwrap_or(0);
-    
     let mut n = char_code;
-    
-    if e_int >= 268850 && e_int <= 421925 {
+
+    let aid = aid_str.trim().parse::<u32>().expect("解析失敗");
+
+    if aid >= 268850 && aid <= 421925 {
         n %= 10;
-    } else if e_int >= 421926 {
+    } else if aid >= 421926 {
         n %= 8;
     }
-    
+
     match n {
         0 => 2,
         1 => 4,
