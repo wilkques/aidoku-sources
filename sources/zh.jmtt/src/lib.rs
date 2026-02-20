@@ -110,19 +110,17 @@ impl PageImageProcessor for Jmtt {
         response: ImageResponse,
         context: Option<PageContext>
     ) -> Result<ImageRef> {
-        // 從 PageContext (HashMap) 中讀取 pieces 參數
         let pieces: u32 = context
             .and_then(|ctx| ctx.get("pieces").and_then(|v| v.parse().ok()))
             .unwrap_or(0);
 
-        // pieces <= 1 代表此圖片不需要重排
         if pieces <= 1 {
             return Ok(response.image);
         }
 
         let image = &response.image;
-        let width = image.width(); // JS: var width = img.naturalWidth;
-        let height = image.height() as u32; // JS: var height = img.naturalHeight;
+        let width = image.width();
+        let height = image.height() as u32;
 
         let mut canvas = Canvas::new(width, height as f32);
 
@@ -140,12 +138,10 @@ impl PageImageProcessor for Jmtt {
                 src_y += remainder;
             }
 
-            // Copy the strip from source to destination
-            // Aidoku copy_image(image, src_rect, dest_rect)
             canvas.copy_image(
                 image,
-                Rect::new(0.0, dest_y as f32, width, slice_height as f32), // src_rect: 從打亂圖抓取
-                Rect::new(0.0, src_y as f32, width, slice_height as f32) // dst_rect: 覆寫回預期正確位置
+                Rect::new(0.0, src_y as f32, width, slice_height as f32),
+                Rect::new(0.0, dest_y as f32, width, slice_height as f32)
             );
         }
 
