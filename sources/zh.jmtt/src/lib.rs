@@ -125,38 +125,25 @@ impl PageImageProcessor for Jmtt {
 
         let mut canvas = Canvas::new(width, height as f32);
 
-        // JS: var remainder = height % pieces;
-        // JS: var sliceHeight = Math.floor(height / pieces);
-        let remainder    = height % pieces;
-        let slice_height = height / pieces;  // 整數除法 = Math.floor
+        let remainder = height % pieces;
+        let slice_height = height / pieces;
 
-        // JS: for (var i = 0; i < pieces; i++) { ... }
         for i in 0..pieces {
-            // JS: var targetY = sliceHeight * i;
-            let mut target_y = slice_height * i;
-            // JS: var sourceY = height - sliceHeight * (i + 1) - remainder;
-            let source_y = height - slice_height * (i + 1) - remainder;
+            let mut h = slice_height;
+            let mut src_y = h * i;
+            let dest_y = height - h * (i + 1) - remainder;
 
-            // JS: var currentH = sliceHeight;
-            let mut current_h = slice_height;
-
-            // JS: if (i == 0) { currentH += remainder; } else { targetY += remainder; }
             if i == 0 {
-                current_h += remainder;
+                h += remainder;
             } else {
-                target_y += remainder;
+                src_y += remainder;
             }
 
-            // JS: context.drawImage(img, 0, sourceY, width, currentH, 0, targetY, width, currentH);
-            //     drawImage(img, sx, sy,      sw,    sh,     dx, dy,      dw,    dh)
-            //
-            // copy_image(image, src_rect, dst_rect)
-            //   src_rect = 從打亂圖讀取 (0, sourceY, width, currentH)
-            //   dst_rect = 畫到畫布     (0, targetY, width, currentH)
+            // Copy the strip from source to destination
             canvas.copy_image(
                 image,
-                Rect::new(0.0, source_y as f32, width, current_h as f32),
-                Rect::new(0.0, target_y as f32, width, current_h as f32),
+                Rect::new(0.0, src_y as f32, width, h as f32), // src_rect
+                Rect::new(0.0, dest_y as f32, width, h as f32), // dst_rect
             );
         }
 

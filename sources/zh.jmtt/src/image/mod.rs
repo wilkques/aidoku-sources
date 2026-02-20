@@ -1,5 +1,6 @@
 use aidoku::{ alloc::{ String, string::ToString as _ }, prelude::* };
 use base64::{ engine::general_purpose, Engine };
+use md5::{Md5, Digest};
 
 /// 清理圖片檔名，處理含有 `next_` 前綴的情況
 ///
@@ -20,41 +21,35 @@ pub fn clean_img_filename(raw_filename: &str) -> String {
     name_without_ext.to_string()
 }
 
-/// 計算圖片應被切成幾片（對應 JS 的 get_num 函數）
-///
-/// JS 原始呼叫方式：
-/// ```js
-/// var num = get_num(btoa(aid), btoa(img.id.split(".")[0]));
-/// ```
-///
-/// 注意：JS 傳入的是 base64 編碼後的值
-pub fn get_pieces_num(aid: &str, img_id: &str) -> u32 {
-    let aid_int: u32 = aid.parse().unwrap_or(0);
+/// Computes the number of slices for the image.
+/// This ports the `get_num` JS function.
+pub fn get_pieces_num(aid_str: &str, image_id: &str) -> u32 {
+    // In the JS: e = atob(btoa(aid)), t = atob(btoa(image_id)). This is basically just the string.
+    // The JS does this: md5(e + t).substr(-1).charCodeAt()
+    let combined = format!("{}{}", aid_str, image_id);
+    
+    // Calculate MD5 hash
+    let mut hasher = Md5::new();
+    hasher.update(combined.as_bytes());
+    let hash_result = hasher.finalize();
+    
+    // Convert to hex string manually to get exactly what JS gets
+    let hash_hex = format!("{:x}", hash_result);
+    // Get last char
+    let last_char = hash_hex.chars().last().unwrap();
+    // Get its character code
+    let char_code = last_char as u32;
 
-    // 舊版圖片固定切 10 片
-    if aid_int < 268850 {
-        return 10;
-    }
-
-    // JS: get_num(btoa(aid), btoa(img_id))
-    // 先 base64 編碼，再串接後計算 md5
-    let b64_aid = general_purpose::STANDARD.encode(aid.as_bytes());
-    let b64_id  = general_purpose::STANDARD.encode(img_id.as_bytes());
-    let combined = format!("{}{}", b64_aid, b64_id);
-    let digest   = md5::compute(combined.as_bytes());
-    let hash_str = format!("{:x}", digest);
-
-    let last_char = hash_str.chars().last().unwrap_or('0');
-    let mut n = last_char as u32;
-
-    // 依 aid 範圍決定取模基數
-    if aid_int >= 268850 && aid_int <= 421925 {
+    let e_int = aid_str.parse::<u32>().unwrap_or(0);
+    
+    let mut n = char_code;
+    
+    if e_int >= 268850 && e_int <= 421925 {
         n %= 10;
-    } else if aid_int >= 421926 {
+    } else if e_int >= 421926 {
         n %= 8;
     }
-
-    // 將餘數對應到實際片數（2、4、6 … 20）
+    
     match n {
         0 => 2,
         1 => 4,
@@ -66,7 +61,7 @@ pub fn get_pieces_num(aid: &str, img_id: &str) -> u32 {
         7 => 16,
         8 => 18,
         9 => 20,
-        _ => 10,
+        _ => 10, // Default fallback
     }
 }
 
