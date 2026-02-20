@@ -126,34 +126,34 @@ impl PageImageProcessor for Jmtt {
 
         let image  = &response.image;
         let width  = image.width();
-        let height = image.height();
+        let h_px   = image.height() as u32;  // 以整數處理高度，避免 no_std 下 f32::floor() 不可用
 
         // 建立與原圖相同大小的畫布
-        let mut canvas = Canvas::new(width, height);
+        let mut canvas = Canvas::new(width, h_px as f32);
 
-        // 計算每片高度與餘數（與 JS 邏輯相同）
-        let remainder = (height as u32) % pieces;
-        let slice_h   = (height / pieces as f32).floor();
+        // 計算每片高度與餘數（整數除法等效於 floor，與 JS 邏輯相同）
+        let slice_h   = h_px / pieces;
+        let remainder = h_px % pieces;
 
         for i in 0..pieces {
-            let mut src_y = slice_h * i as f32;
+            let mut src_y = slice_h * i;
             // 打亂後的來源 Y 座標（從圖片底部往上算）
-            let dst_y     = height - slice_h * (i + 1) as f32 - remainder as f32;
+            let dst_y     = h_px - slice_h * (i + 1) - remainder;
             let mut cur_h = slice_h;
 
             // 第一片補上餘數高度
             if i == 0 {
-                cur_h += remainder as f32;
+                cur_h += remainder;
             } else {
-                src_y += remainder as f32;
+                src_y += remainder;
             }
 
             // 將打亂位置的切片複製到正確位置
             // src_rect = 打亂圖的位置，dst_rect = 還原後的正確位置
             canvas.copy_image(
                 image,
-                Rect::new(0.0, dst_y, width, cur_h),
-                Rect::new(0.0, src_y, width, cur_h),
+                Rect::new(0.0, dst_y as f32, width, cur_h as f32),
+                Rect::new(0.0, src_y as f32, width, cur_h as f32),
             );
         }
 
