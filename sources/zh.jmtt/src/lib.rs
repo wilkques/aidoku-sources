@@ -120,50 +120,50 @@ impl PageImageProcessor for Jmtt {
         }
 
         let image = &response.image;
-        // JS: var nW = img.naturalWidth; var nH = img.naturalHeight;
-        let nw = image.width();
-        let nh = image.height() as u32;
+        let width  = image.width();   // JS: var width = img.naturalWidth;
+        let height = image.height() as u32;  // JS: var height = img.naturalHeight;
 
-        // JS: canvas.width = nW; canvas.height = nH;
-        let mut canvas = Canvas::new(nw, nh as f32);
+        let mut canvas = Canvas::new(width, height as f32);
 
-        // JS: var remainder = nH % pieces;
-        let remainder = nh % pieces;
+        // JS: var remainder = height % pieces;
+        // JS: var sliceHeight = Math.floor(height / pieces);
+        let remainder    = height % pieces;
+        let slice_height = height / pieces;  // 整數除法 = Math.floor
 
-        // JS: for (var m = 0; m < pieces; m++) { ... }
-        for m in 0..pieces {
-            // JS: var h = Math.floor(nH / pieces);
-            let mut h = nh / pieces;
+        // JS: for (var i = 0; i < pieces; i++) { ... }
+        for i in 0..pieces {
+            // JS: var targetY = sliceHeight * i;
+            let mut target_y = slice_height * i;
+            // JS: var sourceY = height - sliceHeight * (i + 1) - remainder;
+            let source_y = height - slice_height * (i + 1) - remainder;
 
-            // JS: var srcY = h * m;
-            let mut src_y = h * m;
+            // JS: var currentH = sliceHeight;
+            let mut current_h = slice_height;
 
-            // JS: var dstY = nH - h * (m + 1) - remainder;
-            let dst_y = nh - h * (m + 1) - remainder;
-
-            // JS: if (m == 0) h += remainder; else srcY += remainder;
-            if m == 0 {
-                h += remainder;
+            // JS: if (i == 0) { currentH += remainder; } else { targetY += remainder; }
+            if i == 0 {
+                current_h += remainder;
             } else {
-                src_y += remainder;
+                target_y += remainder;
             }
 
-            // JS: ctx.drawImage(img, 0, dstY, nW, h, 0, srcY, nW, h);
-            //     drawImage(img, sx, sy,  sw, sh, dx, dy,   dw, dh)
+            // JS: context.drawImage(img, 0, sourceY, width, currentH, 0, targetY, width, currentH);
+            //     drawImage(img, sx, sy,      sw,    sh,     dx, dy,      dw,    dh)
             //
-            // Aidoku: copy_image(image, src_rect, dst_rect)
-            //   src_rect = 從打亂圖讀取的區域 (sx=0, sy=dstY, sw=nW, sh=h)
-            //   dst_rect = 畫到畫布的區域     (dx=0, dy=srcY, dw=nW, dh=h)
+            // copy_image(image, src_rect, dst_rect)
+            //   src_rect = 從打亂圖讀取 (0, sourceY, width, currentH)
+            //   dst_rect = 畫到畫布     (0, targetY, width, currentH)
             canvas.copy_image(
                 image,
-                Rect::new(0.0, dst_y as f32, nw, h as f32),
-                Rect::new(0.0, src_y as f32, nw, h as f32),
+                Rect::new(0.0, source_y as f32, width, current_h as f32),
+                Rect::new(0.0, target_y as f32, width, current_h as f32),
             );
         }
 
         Ok(canvas.get_image())
     }
 }
+
 
 
 register_source!(Jmtt, DeepLinkHandler, BaseUrlProvider, PageImageProcessor);

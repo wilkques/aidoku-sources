@@ -189,9 +189,11 @@ impl GenManga for Document {
 
             // 判斷是否為 WebP 混淆圖片，若是則計算切片數並透過 PageContext 傳遞
             if original_url.contains(".webp") {
-                let raw_filename = original_url.split('/').last().unwrap_or("");
-                let clean_name = clean_img_filename(raw_filename);
-                let pieces = get_pieces_num(&aid, &clean_name);
+                // JS: var num = get_num(btoa(aid), btoa(img.id.split(".")[0]));
+                // img.id 是 HTML 元素的 id 屬性（如 album_photo_00249）
+                let img_id = item.attr("id").unwrap_or_default().trim().to_string();
+                let img_id_no_ext = img_id.split('.').next().unwrap_or(&img_id);
+                let pieces = get_pieces_num(&aid, img_id_no_ext);
 
                 // 透過 PageContext (HashMap) 傳遞 pieces，不污染圖片 URL
                 let mut ctx: PageContext = HashMap::new();

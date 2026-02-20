@@ -1,4 +1,5 @@
 use aidoku::{ alloc::{ String, string::ToString as _ }, prelude::* };
+use base64::{ engine::general_purpose, Engine };
 
 /// 清理圖片檔名，處理含有 `next_` 前綴的情況
 ///
@@ -19,13 +20,15 @@ pub fn clean_img_filename(raw_filename: &str) -> String {
     name_without_ext.to_string()
 }
 
-/// 根據 aid 與圖片檔名計算圖片應被切成幾片
+/// 計算圖片應被切成幾片（對應 JS 的 get_num 函數）
 ///
-/// 切片數規則（移植自 JM 網站 JS）：
-/// - aid < 268850：固定 10 片
-/// - aid 268850~421925：md5 最後字元 % 10 對應偶數片數
-/// - aid >= 421926：md5 最後字元 % 8 對應偶數片數
-pub fn get_pieces_num(aid: &str, img_filename: &str) -> u32 {
+/// JS 原始呼叫方式：
+/// ```js
+/// var num = get_num(btoa(aid), btoa(img.id.split(".")[0]));
+/// ```
+///
+/// 注意：JS 傳入的是 base64 編碼後的值
+pub fn get_pieces_num(aid: &str, img_id: &str) -> u32 {
     let aid_int: u32 = aid.parse().unwrap_or(0);
 
     // 舊版圖片固定切 10 片
@@ -33,9 +36,12 @@ pub fn get_pieces_num(aid: &str, img_filename: &str) -> u32 {
         return 10;
     }
 
-    // 計算 md5(aid + 圖片名) 的最後一個十六進位字元
-    let combined = format!("{}{}", aid, img_filename);
-    let digest = md5::compute(combined.as_bytes());
+    // JS: get_num(btoa(aid), btoa(img_id))
+    // 先 base64 編碼，再串接後計算 md5
+    let b64_aid = general_purpose::STANDARD.encode(aid.as_bytes());
+    let b64_id  = general_purpose::STANDARD.encode(img_id.as_bytes());
+    let combined = format!("{}{}", b64_aid, b64_id);
+    let digest   = md5::compute(combined.as_bytes());
     let hash_str = format!("{:x}", digest);
 
     let last_char = hash_str.chars().last().unwrap_or('0');
@@ -85,4 +91,3 @@ pub fn extract_js_config<'a>(script_text: &'a str, key: &str) -> Option<&'a str>
         Some(&rest[..end])
     }
 }
-
