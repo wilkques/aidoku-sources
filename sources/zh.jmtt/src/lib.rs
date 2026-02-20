@@ -107,16 +107,11 @@ impl PageImageProcessor for Jmtt {
     fn process_page_image(
         &self,
         response: ImageResponse,
-        _context: Option<PageContext>
+        context: Option<PageContext>
     ) -> Result<ImageRef> {
-        // 從請求 URL 中解析 pieces 參數（由 chapter() 附加的 &pieces=N）
-        let pieces: u32 = response.request.url
-            .as_deref()
-            .and_then(|url| {
-                url.split('&')
-                    .find(|s: &&str| s.starts_with("pieces="))
-                    .and_then(|s| s["pieces=".len()..].parse().ok())
-            })
+        // 從 PageContext (HashMap) 中讀取 pieces 參數
+        let pieces: u32 = context
+            .and_then(|ctx| ctx.get("pieces").and_then(|v| v.parse().ok()))
             .unwrap_or(0);
 
         // pieces <= 1 代表此圖片不需要重排（非 WebP 或無混淆）

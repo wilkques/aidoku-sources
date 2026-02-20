@@ -1,10 +1,12 @@
 use aidoku::{
     Chapter,
+    HashMap,
     Manga,
     MangaPageResult,
     MangaStatus,
     Page,
     PageContent,
+    PageContext,
     Result,
     Viewer,
     alloc::{ String, Vec, string::ToString as _ },
@@ -183,22 +185,26 @@ impl GenManga for Document {
         for item in items {
             let original_url = item.attr("data-original").unwrap_or_default().trim().to_string();
 
-            let final_url = if original_url.contains(".webp") {
+            // 判斷是否為 WebP 混淆圖片，若是則計算切片數並透過 PageContext 傳遞
+            if original_url.contains(".webp") {
                 let raw_filename = original_url.split('/').last().unwrap_or("");
                 let clean_name = clean_img_filename(raw_filename);
-
                 let pieces = get_pieces_num(&aid, &clean_name);
 
-                // 【關鍵】將 pieces 參數偷偷掛在 URL 後面，傳遞給 Page Processor
-                format!("{}&pieces={}", original_url, pieces)
-            } else {
-                original_url
-            };
+                // 透過 PageContext (HashMap) 傳遞 pieces，不污染圖片 URL
+                let mut ctx: PageContext = HashMap::new();
+                ctx.insert("pieces".to_string(), pieces.to_string());
 
-            pages.push(Page {
-                content: PageContent::url(final_url),
-                ..Default::default()
-            });
+                pages.push(Page {
+                    content: PageContent::url_context(original_url, ctx),
+                    ..Default::default()
+                });
+            } else {
+                pages.push(Page {
+                    content: PageContent::url(original_url),
+                    ..Default::default()
+                });
+            }
         }
 
         Ok(pages)
