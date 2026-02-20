@@ -24,3 +24,20 @@ impl Fetch {
         Fetch::request(url, HttpMethod::Get)
     }
 }
+
+pub struct Client;
+
+impl Client {
+    pub fn request(url: String, method: HttpMethod) -> Result<Request> {
+        Ok(
+            Request::new(url.clone(), method)?
+            // .header("User-Agent", &ua)
+            // .header("Origin", &settings::get_base_url())
+            .header("Referer", &format!("{}/", settings::get_base_url()))
+        )
+    }
+
+    pub fn get(url: String) -> Result<Request> {
+        Client::request(url, HttpMethod::Get)
+    }
+}

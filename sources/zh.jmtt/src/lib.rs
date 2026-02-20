@@ -13,6 +13,7 @@ use aidoku::{
     DeepLinkHandler,
     DeepLinkResult,
     FilterValue,
+    ImageRequestProvider,
     ImageResponse,
     Manga,
     MangaPageResult,
@@ -24,10 +25,11 @@ use aidoku::{
     alloc::{ String, Vec, string::ToString as _ },
     canvas::Rect,
     imports::canvas::{ Canvas, ImageRef },
+    imports::net::Request,
     prelude::*,
 };
 
-use crate::fetch::Fetch;
+use crate::fetch::{Client, Fetch};
 use crate::html::GenManga;
 use crate::url::Url;
 
@@ -157,8 +159,13 @@ impl PageImageProcessor for Jmtt {
 }
 
 
+impl ImageRequestProvider for Jmtt {
+    fn get_image_request(&self, url: String, _context: Option<PageContext>) -> Result<Request> {        
+        Ok(Client::get(url)?)
+    }
+}
 
-register_source!(Jmtt, DeepLinkHandler, BaseUrlProvider, PageImageProcessor);
+register_source!(Jmtt, DeepLinkHandler, BaseUrlProvider, PageImageProcessor, ImageRequestProvider);
 
 #[cfg(test)]
 mod test;
