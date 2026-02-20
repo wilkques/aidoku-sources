@@ -128,22 +128,27 @@ impl PageImageProcessor for Jmtt {
         let remainder = height % pieces;
         let slice_height = height / pieces;
 
+        // JS loop port
         for i in 0..pieces {
             let mut h = slice_height;
-            let mut src_y = h * i;
-            let dest_y = height - h * (i + 1) - remainder;
+            // In JS: var srcY = h * m; var dstY = height - h * (m+1) - remainder;
+            // However, in JS they do ctx.drawImage(e, 0, dstY, w, h, 0, srcY, w, h)
+            // Which means `dstY` is the SOURCE Y coordinate, and `srcY` is the DESTINATION Y.
+            let mut dest_y = h * i;
+            let src_y = height - h * (i + 1) - remainder;
 
             if i == 0 {
                 h += remainder;
             } else {
-                src_y += remainder;
+                dest_y += remainder;
             }
 
             // Copy the strip from source to destination
+            // Aidoku copy_image(image, src_rect, dest_rect)
             canvas.copy_image(
                 image,
-                Rect::new(0.0, src_y as f32, width, h as f32), // src_rect
-                Rect::new(0.0, dest_y as f32, width, h as f32), // dst_rect
+                Rect::new(0.0, src_y as f32, width, h as f32), // src_rect: 從打亂圖抓取
+                Rect::new(0.0, dest_y as f32, width, h as f32), // dst_rect: 覆寫回預期正確位置
             );
         }
 
