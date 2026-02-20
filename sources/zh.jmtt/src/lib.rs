@@ -114,23 +114,18 @@ impl PageImageProcessor for Jmtt {
             .and_then(|ctx| ctx.get("pieces").and_then(|v| v.parse().ok()))
             .unwrap_or(0);
 
-        if pieces <= 1 {
-            return Ok(response.image);
-        }
-
         let image = &response.image;
         let width = image.width();
-        let height = image.height() as u32;
+        let height = image.height() as f32;
 
         let mut canvas = Canvas::new(width, height as f32);
 
-        let remainder = height % pieces;
+        let remainder = height % (pieces as f32);
 
-        // JS loop port
         for i in 0..pieces {
-            let mut slice_height = height / pieces;
-            let mut src_y = slice_height * i;
-            let dest_y = height - slice_height * (i + 1) - remainder;
+            let mut slice_height = height / (pieces as f32);
+            let mut src_y = slice_height * (i as f32);
+            let dest_y = height - slice_height * ((i + 1) as f32) - remainder;
 
             if i == 0 {
                 slice_height += remainder;
