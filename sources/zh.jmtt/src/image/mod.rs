@@ -35,7 +35,7 @@ pub fn get_pieces_num(aid: &str, img_filename: &str) -> u32 {
 
     // 計算 md5(aid + 圖片名) 的最後一個十六進位字元
     let combined = format!("{}{}", aid, img_filename);
-    let digest   = md5::compute(combined.as_bytes());
+    let digest = md5::compute(combined.as_bytes());
     let hash_str = format!("{:x}", digest);
 
     let last_char = hash_str.chars().last().unwrap_or('0');
@@ -63,3 +63,26 @@ pub fn get_pieces_num(aid: &str, img_filename: &str) -> u32 {
         _ => 10,
     }
 }
+
+/// 從頁面的 <script> 標籤中提取 infiniteScrollConfig 的某個欄位值
+///
+/// 支援 `key: "value"`、`key: 'value'`、`key: 123` 三種格式
+pub fn extract_js_config<'a>(script_text: &'a str, key: &str) -> Option<&'a str> {
+    let search = format!("{}: ", key);
+    let start = script_text.find(&search)? + search.len();
+    let rest = &script_text[start..];
+
+    // 判斷是單引號、雙引號還是無引號
+    let first = rest.chars().next()?;
+    if first == '"' || first == '\'' {
+        // 字串值（單引號或雙引號）
+        let inner = &rest[1..];
+        let end = inner.find(first)?;
+        Some(&inner[..end])
+    } else {
+        // 數字/布林值
+        let end = rest.find(|c: char| !c.is_alphanumeric() && c != '.')?;
+        Some(&rest[..end])
+    }
+}
+

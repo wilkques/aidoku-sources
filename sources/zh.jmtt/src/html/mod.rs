@@ -12,7 +12,7 @@ use aidoku::{
     prelude::*,
 };
 
-use crate::{ image::{ clean_img_filename, get_pieces_num }, url::Url };
+use crate::{ image::{ clean_img_filename, extract_js_config, get_pieces_num }, url::Url };
 
 pub trait GenManga {
     fn list(&self) -> Result<MangaPageResult>;
@@ -99,13 +99,13 @@ impl GenManga for Document {
 
         let is_completed = manga.tags
             .as_ref()
-            .map_or(false, |tags| { tags.iter().any(|t| t == "完結" || t == "完结") });
+            .map_or(false, |tags| { tags.iter().any(|t| (t == "完結" || t == "完结")) });
 
         manga.status = if is_completed { MangaStatus::Completed } else { MangaStatus::Ongoing };
 
         let is_webtoon = manga.tags
             .as_ref()
-            .map_or(false, |tags| { tags.iter().any(|t| t == "韓漫" || t == "韩漫") });
+            .map_or(false, |tags| { tags.iter().any(|t| (t == "韓漫" || t == "韩漫")) });
 
         manga.viewer = if is_webtoon { Viewer::Webtoon } else { Viewer::LeftToRight };
 
@@ -161,8 +161,23 @@ impl GenManga for Document {
     fn chapter(&self) -> Result<Vec<Page>> {
         let mut pages: Vec<Page> = Vec::new();
 
+        // 從頁面 JS 的 infiniteScrollConfig 中取得下一話的 aid
+        let aid = self
+            .select("script")
+            .into_iter()
+            .flatten()
+            .find_map(|node| {
+                let text = node.text().unwrap_or_default();
+                if text.contains("infiniteScrollConfig") {
+                    extract_js_config(&text, "nextChapterAid").map(|s| s.to_string())
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_default();
+
         let items = self
-            .select("div.center.scramble-page.spnotice_chk img")
+            .select("div.center.scramble-page.spnotice_chk > img")
             .ok_or_else(|| error!("No chapter list found"))?;
 
         for item in items {
@@ -171,8 +186,6 @@ impl GenManga for Document {
             let final_url = if original_url.contains(".webp") {
                 let raw_filename = original_url.split('/').last().unwrap_or("");
                 let clean_name = clean_img_filename(raw_filename);
-
-                let aid = item.attr("data-chapter-aid").unwrap_or_default().trim().to_string();
 
                 let pieces = get_pieces_num(&aid, &clean_name);
 
