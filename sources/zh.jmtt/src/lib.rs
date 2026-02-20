@@ -114,47 +114,57 @@ impl PageImageProcessor for Jmtt {
             .and_then(|ctx| ctx.get("pieces").and_then(|v| v.parse().ok()))
             .unwrap_or(0);
 
-        // pieces <= 1 代表此圖片不需要重排（非 WebP 或無混淆）
+        // pieces <= 1 代表此圖片不需要重排
         if pieces <= 1 {
             return Ok(response.image);
         }
 
-        let image  = &response.image;
-        let width  = image.width();
-        let h_px   = image.height() as u32;  // 以整數處理高度，避免 no_std 下 f32::floor() 不可用
+        let image = &response.image;
+        // JS: var nW = img.naturalWidth; var nH = img.naturalHeight;
+        let nw = image.width();
+        let nh = image.height() as u32;
 
-        // 建立與原圖相同大小的畫布
-        let mut canvas = Canvas::new(width, h_px as f32);
+        // JS: canvas.width = nW; canvas.height = nH;
+        let mut canvas = Canvas::new(nw, nh as f32);
 
-        // 計算每片高度與餘數（整數除法等效於 floor，與 JS 邏輯相同）
-        let slice_h   = h_px / pieces;
-        let remainder = h_px % pieces;
+        // JS: var remainder = nH % pieces;
+        let remainder = nh % pieces;
 
-        for i in 0..pieces {
-            let mut src_y = slice_h * i;
-            // 打亂後的來源 Y 座標（從圖片底部往上算）
-            let dst_y     = h_px - slice_h * (i + 1) - remainder;
-            let mut cur_h = slice_h;
+        // JS: for (var m = 0; m < pieces; m++) { ... }
+        for m in 0..pieces {
+            // JS: var h = Math.floor(nH / pieces);
+            let mut h = nh / pieces;
 
-            // 第一片補上餘數高度
-            if i == 0 {
-                cur_h += remainder;
+            // JS: var srcY = h * m;
+            let mut src_y = h * m;
+
+            // JS: var dstY = nH - h * (m + 1) - remainder;
+            let dst_y = nh - h * (m + 1) - remainder;
+
+            // JS: if (m == 0) h += remainder; else srcY += remainder;
+            if m == 0 {
+                h += remainder;
             } else {
                 src_y += remainder;
             }
 
-            // 將打亂位置的切片複製到正確位置
-            // src_rect = 打亂圖的位置，dst_rect = 還原後的正確位置
+            // JS: ctx.drawImage(img, 0, dstY, nW, h, 0, srcY, nW, h);
+            //     drawImage(img, sx, sy,  sw, sh, dx, dy,   dw, dh)
+            //
+            // Aidoku: copy_image(image, src_rect, dst_rect)
+            //   src_rect = 從打亂圖讀取的區域 (sx=0, sy=dstY, sw=nW, sh=h)
+            //   dst_rect = 畫到畫布的區域     (dx=0, dy=srcY, dw=nW, dh=h)
             canvas.copy_image(
                 image,
-                Rect::new(0.0, dst_y as f32, width, cur_h as f32),
-                Rect::new(0.0, src_y as f32, width, cur_h as f32),
+                Rect::new(0.0, dst_y as f32, nw, h as f32),
+                Rect::new(0.0, src_y as f32, nw, h as f32),
             );
         }
 
         Ok(canvas.get_image())
     }
 }
+
 
 register_source!(Jmtt, DeepLinkHandler, BaseUrlProvider, PageImageProcessor);
 

@@ -163,7 +163,7 @@ impl GenManga for Document {
     fn chapter(&self) -> Result<Vec<Page>> {
         let mut pages: Vec<Page> = Vec::new();
 
-        // 從頁面 JS 的 infiniteScrollConfig 中取得下一話的 aid
+        // 從頁面 JS 的 infiniteScrollConfig 中取得當前章節的 aid（用於計算圖片切片數）
         let aid = self
             .select("script")
             .into_iter()
@@ -171,7 +171,7 @@ impl GenManga for Document {
             .find_map(|node| {
                 let text = node.text().unwrap_or_default();
                 if text.contains("infiniteScrollConfig") {
-                    extract_js_config(&text, "nextChapterAid").map(|s| s.to_string())
+                    extract_js_config(&text, "currentAid").map(|s| s.to_string())
                 } else {
                     None
                 }
@@ -184,6 +184,8 @@ impl GenManga for Document {
 
         for item in items {
             let original_url = item.attr("data-original").unwrap_or_default().trim().to_string();
+            // 去掉 URL 的 query string（? 之後的部分）
+            let original_url = original_url.split('?').next().unwrap_or(&original_url).to_string();
 
             // 判斷是否為 WebP 混淆圖片，若是則計算切片數並透過 PageContext 傳遞
             if original_url.contains(".webp") {
