@@ -5,17 +5,27 @@ mod fetch;
 mod html;
 mod settings;
 mod url;
+mod image;
 
 use aidoku::{
-    BaseUrlProvider, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, ImageResponse, Manga, MangaPageResult, Page, PageContext, 
-    PageImageProcessor, Result, Source, 
-    alloc::{String, Vec, string::ToString as _}, 
-    canvas::Rect, 
-    imports::canvas::{Canvas, ImageRef}, 
-    prelude::*
+    BaseUrlProvider,
+    Chapter,
+    DeepLinkHandler,
+    DeepLinkResult,
+    FilterValue,
+    ImageResponse,
+    Manga,
+    MangaPageResult,
+    Page,
+    PageContext,
+    PageImageProcessor,
+    Result,
+    Source,
+    alloc::{ String, Vec, string::ToString as _ },
+    canvas::Rect,
+    imports::canvas::{ Canvas, ImageRef },
+    prelude::*,
 };
-
-use base64::{engine::general_purpose, Engine};
 
 use crate::fetch::Fetch;
 use crate::html::GenManga;
@@ -32,7 +42,7 @@ impl Source for Jmtt {
         &self,
         query: Option<String>,
         page: i32,
-        filters: Vec<FilterValue>,
+        filters: Vec<FilterValue>
     ) -> Result<MangaPageResult> {
         let url = Url::filters(query.as_deref(), page, &filters)?.to_string();
 
@@ -45,7 +55,7 @@ impl Source for Jmtt {
         &self,
         mut manga: Manga,
         needs_details: bool,
-        needs_chapters: bool,
+        needs_chapters: bool
     ) -> Result<Manga> {
         let url = Url::book(manga.key.clone())?.to_string();
 
@@ -95,63 +105,56 @@ impl BaseUrlProvider for Jmtt {
 
 impl PageImageProcessor for Jmtt {
     fn process_page_image(
-            &self,
-            response: ImageResponse,
-            context: Option<PageContext>,
+        &self,
+        response: ImageResponse,
+        _context: Option<PageContext>
     ) -> Result<ImageRef> {
-        let context = match context {
-            Some(ctx) => ctx,
-            None => return Ok(response.image),
-        };
+        // 從請求 URL 中解析 pieces 參數（由 chapter() 附加的 &pieces=N）
+        let pieces: u32 = response.request.url
+            .as_deref()
+            .and_then(|url| {
+                url.split('&')
+                    .find(|s: &&str| s.starts_with("pieces="))
+                    .and_then(|s| s["pieces=".len()..].parse().ok())
+            })
+            .unwrap_or(0);
 
-        let canvas_data_b64 = match context.get("canvas_data") {
-            Some(data) if !data.is_empty() => data,
-            _ => return Ok(response.image),
-        };
-
-        let decoded_bytes = match general_purpose::STANDARD.decode(canvas_data_b64) {
-            Ok(b) => b,
-            Err(_) => return Ok(response.image),
-        };
-        let json_str = String::from_utf8(decoded_bytes).unwrap_or_default();
-
-        // 🔑 暴力堅固的數字萃取器：自動把 "720}" 變成 720.0
-        let extract_f32 = |s: &str| -> f32 {
-            let clean: String = s.chars().filter(|c| c.is_ascii_digit() || *c == '.').collect();
-            clean.parse().unwrap_or(0.0)
-        };
-
-        // 讀取寬高
-        let w_part = json_str.split("\"width\":").nth(1).unwrap_or("0");
-        let width = extract_f32(w_part.split(',').next().unwrap_or("0"));
-
-        let h_part = json_str.split("\"height\":").nth(1).unwrap_or("0");
-        let height = extract_f32(h_part.split(',').next().unwrap_or("0").split('}').next().unwrap_or("0"));
-
-        if width == 0.0 || height == 0.0 {
+        // pieces <= 1 代表此圖片不需要重排（非 WebP 或無混淆）
+        if pieces <= 1 {
             return Ok(response.image);
         }
 
-        // 建立畫布
+        let image  = &response.image;
+        let width  = image.width();
+        let height = image.height();
+
+        // 建立與原圖相同大小的畫布
         let mut canvas = Canvas::new(width, height);
 
-        // 🔑 暴力抓取所有陣列座標：無視任何格式，直接把數字通通抓出來排好
-        let args_str = json_str.split("\"args\":").nth(1).unwrap_or("");
-        let args_array_str = args_str.split("],\"").next().unwrap_or(args_str);
-        
-        let clean_args = args_array_str.replace('[', "").replace(']', "");
-        let nums: Vec<f32> = clean_args
-            .split(',')
-            .filter_map(|s| s.trim().parse::<f32>().ok())
-            .collect();
+        // 計算每片高度與餘數（與 JS 邏輯相同）
+        let remainder = (height as u32) % pieces;
+        let slice_h   = (height / pieces as f32).floor();
 
-        // 每次取 8 個數字一組 (來源 x,y,w,h + 目標 x,y,w,h) 來拼圖
-        for chunk in nums.chunks(8) {
-            if chunk.len() == 8 {
-                let src_rect = Rect::new(chunk[0], chunk[1], chunk[2], chunk[3]);
-                let des_rect = Rect::new(chunk[4], chunk[5], chunk[6], chunk[7]);
-                canvas.copy_image(&response.image, src_rect, des_rect);
+        for i in 0..pieces {
+            let mut src_y = slice_h * i as f32;
+            // 打亂後的來源 Y 座標（從圖片底部往上算）
+            let dst_y     = height - slice_h * (i + 1) as f32 - remainder as f32;
+            let mut cur_h = slice_h;
+
+            // 第一片補上餘數高度
+            if i == 0 {
+                cur_h += remainder as f32;
+            } else {
+                src_y += remainder as f32;
             }
+
+            // 將打亂位置的切片複製到正確位置
+            // src_rect = 打亂圖的位置，dst_rect = 還原後的正確位置
+            canvas.copy_image(
+                image,
+                Rect::new(0.0, dst_y, width, cur_h),
+                Rect::new(0.0, src_y, width, cur_h),
+            );
         }
 
         Ok(canvas.get_image())

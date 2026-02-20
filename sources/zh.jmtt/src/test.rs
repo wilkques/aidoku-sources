@@ -1,4 +1,4 @@
-#![expect(clippy::unwrap_used)]
+// #![expect(clippy::unwrap_used)]
 
 // use super::*;
 // use aidoku_test::aidoku_test;
