@@ -121,12 +121,12 @@ impl PageImageProcessor for Jmtt {
 
         let mut canvas = Canvas::new(width, height as f32);
 
-        let remainder = (height % (pieces as f32)).floor();
+        let remainder = height % (pieces as f32);
 
         for i in 0..pieces {
             let mut slice_height = (height / (pieces as f32)).floor();
             let mut src_y = slice_height * (i as f32);
-            let dest_y = height - slice_height * ((i + 1) as f32) - remainder;
+            let dst_y = height - slice_height * ((i + 1) as f32) - remainder;
 
             if i == 0 {
                 slice_height += remainder;
@@ -136,8 +136,8 @@ impl PageImageProcessor for Jmtt {
 
             canvas.copy_image(
                 image,
-                Rect::new(0.0, src_y as f32, width, slice_height as f32),
-                Rect::new(0.0, dest_y as f32, width, slice_height as f32)
+                Rect::new(0.0, dst_y as f32, width, slice_height as f32),
+                Rect::new(0.0, src_y as f32, width, slice_height as f32)
             );
         }
 
