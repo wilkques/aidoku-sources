@@ -1,9 +1,11 @@
 # How to use
 
 ```
-cd /<document_root>/sources
+git clone git@github.com:wilkques/aidoku-sources.git
 
-docker build -t aidoku-rs .
+cd /<document_root>/aidoku-sources/sources
+
+docker build -t aidoku-sources .
 
 docker run -d -it --rm \
 --name aidoku-rs \
@@ -11,14 +13,14 @@ docker run -d -it --rm \
 -v /etc/localtime:/etc/localtime:ro \
 -v /etc/timezone:/etc/timezone:ro \
 -w /usr/src/app \
-aidoku-rs
+aidoku-sources
 
-docker exec -it aidoku-rs /bin/sh
+docker exec -it aidoku-sources /bin/sh
 ```
 
 ## develop
 ```
-cd /<document_root>/sources/<source name>
+cd /<document_root>/aidoku-sources/sources/<source name>
 
 # run test
 cargo test
@@ -32,11 +34,11 @@ cargo test -- --nocapture
 
 ## deployment
 ```
-cd /<document_root>/sources/<source name>
+cd /<document_root>/aidoku-sources/sources/<source name>
 
 aidoku package
 
-cd ../..
+cd /<document_root>/aidoku-sources
 
 aidoku build sources/*/package.aix --name "Wilkques Sources"
 ```
@@ -47,7 +49,5 @@ docker command
 # stop
 docker ps -a
 
-docker stop <Container ID/name>
-
-docker rm <Container ID/name>
+docker stop aidoku-sources
 ```
