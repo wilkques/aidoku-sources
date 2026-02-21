@@ -99,19 +99,19 @@ pub fn reload_img(image: &ImageRef, pieces: u32) -> ImageRef {
 
     for i in 0..pieces {
         let mut slice_height = (height / (pieces as f32)).floor();
-        let mut src_y = slice_height * (i as f32);
-        let dst_y = height - slice_height * ((i + 1) as f32) - remainder;
+        let mut dst_y = slice_height * (i as f32);
+        let src_y = height - slice_height * ((i + 1) as f32) - remainder;
 
         if i == 0 {
             slice_height += remainder;
         } else {
-            src_y += remainder;
+            dst_y += remainder;
         }
 
         canvas.copy_image(
             image,
-            Rect::new(0.0, dst_y as f32, width, slice_height as f32),
-            Rect::new(0.0, src_y as f32, width, slice_height as f32)
+            Rect::new(0.0, src_y as f32, width, slice_height as f32),
+            Rect::new(0.0, dst_y as f32, width, slice_height as f32)
         );
     }
 
