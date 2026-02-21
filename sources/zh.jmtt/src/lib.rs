@@ -44,7 +44,7 @@ impl Source for Jmtt {
         filters: Vec<FilterValue>
     ) -> Result<MangaPageResult> {
         let url = Url::filters(query.as_deref(), page, &filters)?.to_string();
-
+panic!("{}", url);
         let response = Fetch::get(url)?.get_html()?;
 
         GenManga::list(&response)

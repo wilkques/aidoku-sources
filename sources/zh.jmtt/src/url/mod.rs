@@ -57,9 +57,9 @@ impl Url {
         let safe_query = query.map(encode_uri).unwrap_or_default();
 
         let mut tag = String::from("");
-        let mut sort = String::from("最新");
-        let mut timing = String::from("全部");
-        let mut range = String::from("站內");
+        let mut sort = String::from("mr");
+        let mut timing = String::from("a");
+        let mut range = String::from("0");
 
         for filter in filters {
             match filter {

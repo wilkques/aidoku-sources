@@ -29,7 +29,8 @@
 //     let result = source
 //         // .get_search_manga_list(Some("富家女".to_string()), 1, Vec::new())
 //         // .get_search_manga_list(None, 1, Vec::new())
-//         .get_search_manga_list(None, 1, filters)
+//         // .get_search_manga_list(None, 1, filters)
+//         .get_search_manga_list(Some("富家女".to_string()), 1, filters)
 //         .unwrap();
 
 //     panic!("完整結果: {:#?}", result);
