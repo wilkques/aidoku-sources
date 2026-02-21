@@ -12,8 +12,6 @@ docker run -d -it --rm \
 aidoku-rs
 
 docker exec -it aidoku-rs /bin/sh
-
-rustup target add wasm32-unknown-unknown
 ```
 
 ## develop

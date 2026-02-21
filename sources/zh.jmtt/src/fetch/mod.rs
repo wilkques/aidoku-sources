@@ -13,7 +13,7 @@ impl Fetch {
     pub fn request(url: String, method: HttpMethod) -> Result<Response> {
         Ok(
             Request::new(url.clone(), method)?
-            // .header("User-Agent", &ua)
+            // .header("User-Agent", &settings::get_user_agent())
             // .header("Origin", &settings::get_base_url())
             .header("Referer", &format!("{}/", settings::get_base_url()))
             .send()?
@@ -31,7 +31,7 @@ impl Client {
     pub fn request(url: String, method: HttpMethod) -> Result<Request> {
         Ok(
             Request::new(url.clone(), method)?
-            // .header("User-Agent", &ua)
+            // .header("User-Agent", &settings::get_user_agent())
             // .header("Origin", &settings::get_base_url())
             .header("Referer", &format!("{}/", settings::get_base_url()))
         )

@@ -1,7 +1,6 @@
 use aidoku::{
     FilterValue, Result,
     alloc::{String},
-    helpers::uri::encode_uri,
     prelude::*,
 };
 

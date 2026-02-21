@@ -35,4 +35,6 @@ RUN cargo install --git https://github.com/Aidoku/aidoku-rs aidoku-cli
 
 RUN cargo install --git https://github.com/Aidoku/aidoku-rs aidoku-test-runner
 
+RUN rustup target add wasm32-unknown-unknown
+
 WORKDIR /usr/src/app
