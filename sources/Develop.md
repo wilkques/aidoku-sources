@@ -1,6 +1,8 @@
 # How to use
 
 ```
+cd /<document_root>/sources
+
 docker build -t aidoku-rs .
 
 docker run -d -it --rm \
