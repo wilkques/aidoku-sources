@@ -3,32 +3,24 @@ extern crate alloc;
 
 mod fetch;
 mod html;
+mod image;
 mod settings;
 mod url;
-mod image;
 
 use aidoku::{
-    BaseUrlProvider,
-    Chapter,
-    DeepLinkHandler,
-    DeepLinkResult,
-    FilterValue,
-    ImageRequestProvider,
-    ImageResponse,
-    Manga,
-    MangaPageResult,
-    Page,
-    PageContext,
-    PageImageProcessor,
-    Result,
-    Source,
-    alloc::{ String, Vec, string::ToString as _ },
-    imports::canvas::ImageRef,
-    imports::net::Request,
+    BaseUrlProvider, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, ImageRequestProvider,
+    ImageResponse, Manga, MangaPageResult, Page, PageContext, PageImageProcessor, Result, Source,
+    alloc::{String, Vec, string::ToString as _},
+    imports::{canvas::ImageRef, net::Request},
     prelude::*,
 };
 
-use crate::{ url::Url, fetch::{ Client, Fetch }, html::GenManga, image::reload_img };
+use crate::{
+    fetch::{Client, Fetch},
+    html::GenManga,
+    image::reload_img,
+    url::Url,
+};
 
 struct Jmtt;
 
@@ -41,7 +33,7 @@ impl Source for Jmtt {
         &self,
         query: Option<String>,
         page: i32,
-        filters: Vec<FilterValue>
+        filters: Vec<FilterValue>,
     ) -> Result<MangaPageResult> {
         let url = Url::filters(query.as_deref(), page, &filters)?.to_string();
 
@@ -54,7 +46,7 @@ impl Source for Jmtt {
         &self,
         mut manga: Manga,
         needs_details: bool,
-        needs_chapters: bool
+        needs_chapters: bool,
     ) -> Result<Manga> {
         let url = Url::book(manga.key.clone())?.to_string();
 
@@ -82,7 +74,12 @@ impl Source for Jmtt {
 impl DeepLinkHandler for Jmtt {
     fn handle_deep_link(&self, url: String) -> Result<Option<DeepLinkResult>> {
         if url.contains("/album/") {
-            let key = url.split("/").skip(4).next().unwrap_or_default().to_string();
+            let key = url
+                .split("/")
+                .skip(4)
+                .next()
+                .unwrap_or_default()
+                .to_string();
 
             if key.is_empty() {
                 return Ok(None);
@@ -105,7 +102,7 @@ impl PageImageProcessor for Jmtt {
     fn process_page_image(
         &self,
         response: ImageResponse,
-        context: Option<PageContext>
+        context: Option<PageContext>,
     ) -> Result<ImageRef> {
         let pieces: u32 = context
             .and_then(|ctx| ctx.get("pieces").and_then(|v| v.parse().ok()))
@@ -121,7 +118,13 @@ impl ImageRequestProvider for Jmtt {
     }
 }
 
-register_source!(Jmtt, DeepLinkHandler, BaseUrlProvider, PageImageProcessor, ImageRequestProvider);
+register_source!(
+    Jmtt,
+    DeepLinkHandler,
+    BaseUrlProvider,
+    PageImageProcessor,
+    ImageRequestProvider
+);
 
 #[cfg(test)]
 mod test;

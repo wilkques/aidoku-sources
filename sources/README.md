@@ -13,6 +13,7 @@ docker run -d -it --rm \
 -v /etc/localtime:/etc/localtime:ro \
 -v /etc/timezone:/etc/timezone:ro \
 -w /usr/src/app \
+-p 8080:8080 \
 aidoku-sources
 
 docker exec -it aidoku-sources /bin/sh

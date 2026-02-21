@@ -13,12 +13,14 @@
       "https://jm18c-tdc.net"
     ],
     "contentRating": 2,
-    "languages": ["zh"]
+    "languages": [
+      "zh"
+    ]
   },
-	"config": {
-		"allowsBaseUrlSelect": true,
-		"hidesFiltersWhileSearching": true,
-		"supportsAuthorSearch": true,
-		"supportsTagSearch": true
-	}
+  "config": {
+    "allowsBaseUrlSelect": true,
+    "hidesFiltersWhileSearching": true,
+    "supportsAuthorSearch": true,
+    "supportsTagSearch": true
+  }
 }
