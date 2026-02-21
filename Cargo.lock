@@ -204,6 +204,7 @@ dependencies = [
  "aidoku-test",
  "base64",
  "md-5",
+ "num-traits",
 ]
 
 [[package]]

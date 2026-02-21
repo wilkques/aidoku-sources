@@ -32,6 +32,7 @@ use aidoku::{
 use crate::fetch::{ Client, Fetch };
 use crate::html::GenManga;
 use crate::url::Url;
+use num_traits::float::FloatCore;
 
 struct Jmtt;
 
@@ -120,10 +121,10 @@ impl PageImageProcessor for Jmtt {
 
         let mut canvas = Canvas::new(width, height as f32);
 
-        let remainder = height % (pieces as f32);
+        let remainder = (height % (pieces as f32)).floor();
 
         for i in 0..pieces {
-            let mut slice_height = height / (pieces as f32);
+            let mut slice_height = (height / (pieces as f32)).floor();
             let mut src_y = slice_height * (i as f32);
             let dest_y = height - slice_height * ((i + 1) as f32) - remainder;
 

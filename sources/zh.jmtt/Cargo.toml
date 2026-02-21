@@ -7,7 +7,7 @@ edition = "2024"
 aidoku = { git = "https://github.com/Aidoku/aidoku-rs.git", features = ["helpers", "json"] }
 base64 = { version = "0.21", default-features = false, features = ["alloc"] }
 md-5 = { version = "0.10.6", default-features = false }
-
+num-traits = { version = "0.2", default-features = false }
 
 [dev-dependencies]
 aidoku = { git = "https://github.com/Aidoku/aidoku-rs.git", features = ["test"] }

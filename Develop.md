@@ -11,7 +11,7 @@ docker run -d -it --rm \
 -w /usr/src/app \
 aidoku-rs
 
-docker exec -it <Container ID> /bin/sh
+docker exec -it aidoku-rs /bin/sh
 
 rustup target add wasm32-unknown-unknown
 ```

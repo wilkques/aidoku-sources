@@ -196,7 +196,7 @@ impl GenManga for Document {
             // 判斷是否為 WebP 混淆圖片，若是則計算切片數並透過 PageContext 傳遞
             if original_url.contains(".webp") {
                 // JS 傳給 get_num 的 t (parentId) 為純檔案名稱數字，例如：
-                // e.id: "album_photo_00005.webp"
+                // e.id: "album_photo_00005.webp" or "00005.webp"
                 // parentId (t): "00005"
                 let mut img_id = item.attr("id").unwrap_or_default().trim().to_string();
 
