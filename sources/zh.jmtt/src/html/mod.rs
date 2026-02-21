@@ -164,7 +164,10 @@ impl GenManga for Document {
         let mut pages: Vec<Page> = Vec::new();
         let mut aid = chapter_key.to_string();
 
-        // 嘗試從頁面 JS 的 infiniteScrollConfig 取得當前章節的 aid 作為雙重保險
+        // 嘗試從頁面 JS 的 window.infiniteScrollConfig 取得當前章節的 aid 作為雙重保險
+        // URL 上面也有比對的方法 https://18comic.vip/album/<禁漫車號不需要開頭JM>
+        // ex: https://18comic.vip/album/1216233
+        // 禁漫車號不需要開頭JM ex: JM1216233 -> 1216233
         if
             let Some(script_aid) = self
                 .select("script")
@@ -210,6 +213,8 @@ impl GenManga for Document {
                     img_id = img_id[last_index + 1..].to_string();
                 }
 
+                // 取得圖片分塊數
+                // ex: aid => 1216233, img_id => 00005
                 let pieces = get_pieces_num(&aid, &img_id);
 
                 // 透過 PageContext (HashMap) 傳遞 pieces，不污染圖片 URL
