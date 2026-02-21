@@ -45,7 +45,7 @@ impl Url {
                 page,
             } => {
                 if !query.is_empty() {
-                    return format!("{}/search/photos/{}?main_tag={}&search_query={}t={}&o={}&page={}", base_url, tag, range, query, timing, sort, page);
+                    return format!("{}/search/photos/{}?main_tag={}&search_query={}&t={}&o={}&page={}", base_url, tag, range, query, timing, sort, page);
                 } else {
                     format!("{}/albums/{}?t={}&o={}&page={}", base_url, tag, timing, sort, page)
                 }

@@ -44,7 +44,7 @@ impl GenManga for Document {
 
             let url = Url::book(id.clone())?.to_string();
 
-            let img_node = item.select_first("a > img").ok_or_else(|| error!("No cover found"))?;
+            let img_node = item.select_first("img.lazy_img").ok_or_else(|| error!("No cover found"))?;
 
             let cover = img_node
                 .attr("data-original")

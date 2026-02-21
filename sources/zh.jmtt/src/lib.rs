@@ -23,16 +23,12 @@ use aidoku::{
     Result,
     Source,
     alloc::{ String, Vec, string::ToString as _ },
-    canvas::Rect,
-    imports::canvas::{ Canvas, ImageRef },
+    imports::canvas::ImageRef,
     imports::net::Request,
     prelude::*,
 };
 
-use crate::fetch::{ Client, Fetch };
-use crate::html::GenManga;
-use crate::url::Url;
-use num_traits::float::FloatCore;
+use crate::{ url::Url, fetch::{ Client, Fetch }, html::GenManga, image::reload_img };
 
 struct Jmtt;
 
@@ -115,33 +111,7 @@ impl PageImageProcessor for Jmtt {
             .and_then(|ctx| ctx.get("pieces").and_then(|v| v.parse().ok()))
             .unwrap_or(0);
 
-        let image = &response.image;
-        let width = image.width();
-        let height = image.height() as f32;
-
-        let mut canvas = Canvas::new(width, height as f32);
-
-        let remainder = height % (pieces as f32);
-
-        for i in 0..pieces {
-            let mut slice_height = (height / (pieces as f32)).floor();
-            let mut src_y = slice_height * (i as f32);
-            let dst_y = height - slice_height * ((i + 1) as f32) - remainder;
-
-            if i == 0 {
-                slice_height += remainder;
-            } else {
-                src_y += remainder;
-            }
-
-            canvas.copy_image(
-                image,
-                Rect::new(0.0, dst_y as f32, width, slice_height as f32),
-                Rect::new(0.0, src_y as f32, width, slice_height as f32)
-            );
-        }
-
-        Ok(canvas.get_image())
+        Ok(reload_img(&response.image, pieces))
     }
 }
 
