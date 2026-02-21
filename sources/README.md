@@ -8,7 +8,7 @@ cd /<document_root>/aidoku-sources/sources
 docker build -t aidoku-sources .
 
 docker run -d -it --rm \
---name aidoku-rs \
+--name aidoku-sources \
 -v $(pwd)/../:/usr/src/app \
 -v /etc/localtime:/etc/localtime:ro \
 -v /etc/timezone:/etc/timezone:ro \
@@ -18,7 +18,7 @@ aidoku-sources
 docker exec -it aidoku-sources /bin/sh
 ```
 
-## develop
+## Develop
 ```
 cd /<document_root>/aidoku-sources/sources/<source name>
 
@@ -32,7 +32,7 @@ cargo test --release
 cargo test -- --nocapture
 ```
 
-## deployment
+## Deployment
 ```
 cd /<document_root>/aidoku-sources/sources/<source name>
 
@@ -43,7 +43,7 @@ cd /<document_root>/aidoku-sources
 aidoku build sources/*/package.aix --name "Wilkques Sources"
 ```
 
-docker command
+## Docker command
 
 ```
 # stop
