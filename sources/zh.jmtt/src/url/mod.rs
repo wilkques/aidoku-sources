@@ -54,8 +54,6 @@ impl Url {
     }
 
     pub fn filters(query: Option<&str>, page: i32, filters: &[FilterValue]) -> Result<Self> {
-        let safe_query = query.map(encode_uri).unwrap_or_default();
-
         let mut tag = String::from("");
         let mut sort = String::from("mr");
         let mut timing = String::from("a");
@@ -75,7 +73,7 @@ impl Url {
         }
 
         Ok(Self::Filter {
-            query: safe_query,
+            query: query.unwrap_or_default().into(),
             tag,
             sort,
             timing,
