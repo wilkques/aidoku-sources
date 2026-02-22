@@ -75,7 +75,7 @@ docker stop aidoku-sources
 ## Steps to Open a Firewall Port
 
 - Windows
-    按下 Win + R 鍵，輸入 wf.msc 並按下 Enter。
+    按下 Win + R 鍵，輸入 `wf.msc 並按下 Enter。
 
     點選左側的 輸入規則 (Inbound Rules)，接著在右側操作面板點選 新增規則... (New Rule...)。
 

@@ -10,19 +10,19 @@
 //     let filters = vec![
 //         FilterValue::Select {
 //             id: String::from("類型"),
-//             value: String::from("hanman"), 
+//             value: String::from("hanman"),
 //         },
 //         FilterValue::Select {
 //             id: String::from("時間"),
-//             value: String::from("t"), 
+//             value: String::from("t"),
 //         },
 //         // FilterValue::Select {
 //         //     id: String::from("题材"),
-//         //     value: String::from("性感"), 
+//         //     value: String::from("性感"),
 //         // },
 //         // FilterValue::Select {
 //         //     id: String::from("地区"),
-//         //     value: String::from("2"), 
+//         //     value: String::from("2"),
 //         // },
 //         // FilterValue::Select {
 //         //     id: String::from("进度"),
@@ -46,19 +46,26 @@
 
 //     // 1. 建立一個假的 Manga 用於測試
 //     let manga = Manga {
-//         key: "1111972".to_string(), // 換成真實的漫畫 ID 以測試
-//         title: "与初恋的意外同居 / 與初戀的意外同居".to_string(),
-//         cover: Some("https://cdn-msp3.18comic.vip/media/albums/1111972_3x4.jpg?u=1771167758".to_string()),
-//         url: Some(
-//             "https://18comic.vip/album/1111972".to_string(),
+//         key: "1283446".to_string(), // 換成真實的漫畫 ID 以測試
+//         title: "[禁漫漢化組](C107)[許さない(藤隆)]副課長が同僚に好きにされちゃう本(ゼンレスゾーンゼロ)[中国翻訳]".to_string(),
+//         cover: Some(
+//             "https://cdn-msp2.18comic.vip/media/albums/1283446.jpg?u=1771654522".to_string(),
 //         ),
+//         url: Some("https://18comic.vip/album/1283446".to_string()),
 //         ..Default::default()
 //     };
+//     // let manga = Manga {
+//     //     key: "1111972".to_string(), // 換成真實的漫畫 ID 以測試
+//     //     title: "与初恋的意外同居 / 與初戀的意外同居".to_string(),
+//     //     cover: Some(
+//     //         "https://cdn-msp3.18comic.vip/media/albums/1111972_3x4.jpg?u=1771167758".to_string(),
+//     //     ),
+//     //     url: Some("https://18comic.vip/album/1111972".to_string()),
+//     //     ..Default::default()
+//     // };
 
 //     // 2. 傳入正確的三個參數
-//     let result = source
-//         .get_manga_update(manga, true, true)
-//         .unwrap();
+//     let result = source.get_manga_update(manga, true, true).unwrap();
 
 //     panic!("完整結果: {:#?}", result);
 // }
@@ -67,23 +74,37 @@
 // fn test_get_page_list() {
 //     let source = Jmtt::new();
 
+//     // let manga = Manga {
+//     //     key: "1111972".to_string(),
+//     //     title: "与初恋的意外同居 / 與初戀的意外同居".to_string(),
+//     //     cover: Some("https://cdn-msp3.18comic.vip/media/albums/1111972_3x4.jpg?u=1771167758".to_string()),
+//     //     ..Default::default()
+//     // };
+
+//     // let chapter = Chapter {
+//     //     key: "1111972".to_string(),
+//     //     title: Some("第1話".to_string()),
+//     //     chapter_number: Some(1.0),
+//     //     ..Default::default()
+//     // };
+
 //     let manga = Manga {
-//         key: "1111972".to_string(),
-//         title: "与初恋的意外同居 / 與初戀的意外同居".to_string(),
-//         cover: Some("https://cdn-msp3.18comic.vip/media/albums/1111972_3x4.jpg?u=1771167758".to_string()),
+//         key: "1283446".to_string(),
+//         title: "[禁漫漢化組](C107)[許さない(藤隆)]副課長が同僚に好きにされちゃう本(ゼンレスゾーンゼロ)[中国翻訳]".to_string(),
+//         cover: Some(
+//             "https://cdn-msp2.18comic.vip/media/albums/1283446.jpg?u=1771654522".to_string(),
+//         ),
 //         ..Default::default()
 //     };
 
 //     let chapter = Chapter {
-//         key: "1111972".to_string(),
-//         title: Some("第1話".to_string()),
+//         key: "1283446".to_string(),
+//         title: Some("單章節".to_string()),
 //         chapter_number: Some(1.0),
 //         ..Default::default()
 //     };
 
-//     let result = source
-//         .get_page_list(manga, chapter)
-//         .unwrap();
+//     let result = source.get_page_list(manga, chapter).unwrap();
 
 //     panic!("完整結果: {:#?}", result);
 // }

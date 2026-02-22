@@ -1,26 +1,18 @@
 use aidoku::{
-    Chapter,
-    HashMap,
-    Manga,
-    MangaPageResult,
-    MangaStatus,
-    Page,
-    PageContent,
-    PageContext,
-    Result,
+    Chapter, HashMap, Manga, MangaPageResult, MangaStatus, Page, PageContent, PageContext, Result,
     Viewer,
-    alloc::{ String, Vec, string::ToString as _ },
+    alloc::{String, Vec, string::ToString as _},
     imports::html::Document,
     prelude::*,
 };
 
-use crate::{ image::{ extract_js_config, get_pieces_num }, url::Url };
+use crate::{helpers::get_image_pieces_num, url::Url};
 
 pub trait GenManga {
     fn list(&self) -> Result<MangaPageResult>;
     fn detail(&self, manga: &mut Manga) -> Result<()>;
-    fn chapters(&self) -> Result<Vec<Chapter>>;
-    fn chapter(&self, chapter_key: &str) -> Result<Vec<Page>>;
+    fn chapters(&self, manga: &Manga) -> Result<Vec<Chapter>>;
+    fn chapter(&self, chapter: &Chapter) -> Result<Vec<Page>>;
 }
 
 impl GenManga for Document {
@@ -44,7 +36,9 @@ impl GenManga for Document {
 
             let url = Url::book(id.clone())?.to_string();
 
-            let img_node = item.select_first("img.lazy_img").ok_or_else(|| error!("No cover found"))?;
+            let img_node = item
+                .select_first("img.lazy_img")
+                .ok_or_else(|| error!("No cover found"))?;
 
             let cover = img_node
                 .attr("data-original")
@@ -80,68 +74,102 @@ impl GenManga for Document {
         manga.authors = self
             .select("span[itemprop='author'][data-type='author'] a.web-author-tag")
             .map(|list| {
-                list.map(|element|
-                    element.text().unwrap_or_default().trim().to_string()
-                ).collect::<Vec<String>>()
+                list.map(|element| element.text().unwrap_or_default().trim().to_string())
+                    .collect::<Vec<String>>()
             });
 
         manga.artists = Some(Vec::new());
 
-        manga.description = self
-            .select("h2.p-t-5.p-b-5")
-            .map(|list| list.text().unwrap_or_default().replace("敘述：", "").trim().to_string());
+        manga.description = self.select("h2.p-t-5.p-b-5").map(|list| {
+            list.text()
+                .unwrap_or_default()
+                .replace("敘述：", "")
+                .trim()
+                .to_string()
+        });
 
-        manga.tags = self
-            .select("span[itemprop='genre'][data-type='tags'] a.web-tags-tag")
-            .map(|list| {
-                list.map(|element|
-                    element.text().unwrap_or_default().trim().to_string()
-                ).collect::<Vec<String>>()
-            });
+        let selectors = [
+            "span[itemprop='genre'][data-type='tags'] a.web-tags-tag",
+            "span[itemprop='author'][data-type='works'] a.web-work-tag",
+            "span[itemprop='author'][data-type='actor'] a.web-actor-tag",
+        ];
 
-        let is_completed = manga.tags
-            .as_ref()
-            .map_or(false, |tags| { tags.iter().any(|t| t == "完結" || t == "完结") });
+        manga.tags = Some(
+            selectors
+                .iter()
+                .flat_map(|s| self.select(s).into_iter().flatten())
+                .map(|el| el.text().unwrap_or_default().trim().to_string())
+                .collect(),
+        )
+        .filter(|v: &Vec<String>| !v.is_empty());
 
-        manga.status = if is_completed { MangaStatus::Completed } else { MangaStatus::Ongoing };
+        let is_completed = manga.tags.as_ref().map_or(false, |tags| {
+            tags.iter().any(|t| t == "完結" || t == "完结")
+        });
 
-        let is_webtoon = manga.tags
-            .as_ref()
-            .map_or(false, |tags| { tags.iter().any(|t| t == "韓漫" || t == "韩漫") });
+        manga.status = if is_completed {
+            MangaStatus::Completed
+        } else {
+            MangaStatus::Ongoing
+        };
 
-        manga.viewer = if is_webtoon { Viewer::Webtoon } else { Viewer::LeftToRight };
+        let is_webtoon = manga.tags.as_ref().map_or(false, |tags| {
+            tags.iter().any(|t| t == "韓漫" || t == "韩漫")
+        });
+
+        manga.viewer = if is_webtoon {
+            Viewer::Webtoon
+        } else {
+            Viewer::RightToLeft
+        };
 
         Ok(())
     }
 
-    fn chapters(&self) -> Result<Vec<Chapter>> {
+    fn chapters(&self, manga: &Manga) -> Result<Vec<Chapter>> {
         let mut chapters: Vec<Chapter> = Vec::new();
 
-        let items = self
+        let items: Vec<_> = self
             .select("div.episode > ul > a")
-            .ok_or_else(|| error!("No chapter items found"))?;
+            .map(|el| el.collect::<Vec<_>>())
+            .unwrap_or_default();
 
-        for (index, item) in items.enumerate() {
+        if items.is_empty() {
+            chapters.push(Chapter {
+                key: manga.key.clone(),
+                title: Some("單章節".to_string()),
+                chapter_number: Some(1.0),
+                url: Some(Url::chapter(manga.key.clone())?.to_string()),
+                ..Default::default()
+            });
+
+            return Ok(chapters);
+        }
+
+        for (index, item) in items.iter().enumerate() {
             let href = item.attr("href").unwrap_or_default();
 
             if href.is_empty() {
                 continue;
             }
 
-            let key = item.attr("data-album").unwrap_or_default().trim().to_string();
+            let key = item
+                .attr("data-album")
+                .unwrap_or_default()
+                .trim()
+                .to_string();
 
             let url = Url::chapter(key.clone())?.to_string();
 
             let title = Some(
-                item
-                    .select_first("h3.h2_series")
+                item.select_first("h3.h2_series")
                     .ok_or_else(|| error!("No chapter items found"))?
                     .text()
                     .unwrap_or_default()
                     .split_whitespace()
                     .next()
                     .unwrap_or_default()
-                    .to_string()
+                    .to_string(),
             );
 
             let chapter_number = Some((index + 1) as f32);
@@ -160,41 +188,26 @@ impl GenManga for Document {
         Ok(chapters)
     }
 
-    fn chapter(&self, chapter_key: &str) -> Result<Vec<Page>> {
+    fn chapter(&self, chapter: &Chapter) -> Result<Vec<Page>> {
         let mut pages: Vec<Page> = Vec::new();
-        let mut aid = chapter_key.to_string();
-
-        // 嘗試從頁面 JS 的 window.infiniteScrollConfig 取得當前章節的 aid 作為雙重保險
-        // URL 上面也有比對的方法 https://18comic.vip/album/<禁漫車號不需要開頭JM>
-        // ex: https://18comic.vip/album/1216233
-        // 禁漫車號不需要開頭JM ex: JM1216233 -> 1216233
-        if
-            let Some(script_aid) = self
-                .select("script")
-                .into_iter()
-                .flatten()
-                .find_map(|node| {
-                    let text = node.text().unwrap_or_default();
-                    if text.contains("infiniteScrollConfig") {
-                        extract_js_config(&text, "currentAid").map(|s| s.to_string())
-                    } else {
-                        None
-                    }
-                })
-        {
-            if !script_aid.is_empty() {
-                aid = script_aid;
-            }
-        }
+        let aid = chapter.key.to_string();
 
         let items = self
             .select("div.center.scramble-page.spnotice_chk > img")
             .ok_or_else(|| error!("No chapter list found"))?;
 
         for item in items {
-            let original_url = item.attr("data-original").unwrap_or_default().trim().to_string();
+            let original_url = item
+                .attr("data-original")
+                .unwrap_or_default()
+                .trim()
+                .to_string();
             // 去掉 URL 的 query string（? 之後的部分）
-            let original_url = original_url.split('?').next().unwrap_or(&original_url).to_string();
+            let original_url = original_url
+                .split('?')
+                .next()
+                .unwrap_or(&original_url)
+                .to_string();
 
             // 判斷是否為 WebP 混淆圖片，若是則計算切片數並透過 PageContext 傳遞
             if original_url.contains(".webp") {
@@ -215,7 +228,7 @@ impl GenManga for Document {
 
                 // 取得圖片分塊數
                 // ex: aid => 1216233, img_id => 00005
-                let pieces = get_pieces_num(&aid, &img_id);
+                let pieces = get_image_pieces_num(&aid, &img_id);
 
                 // 透過 PageContext (HashMap) 傳遞 pieces，不污染圖片 URL
                 let mut ctx: PageContext = HashMap::new();

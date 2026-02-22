@@ -2,8 +2,8 @@
 extern crate alloc;
 
 mod fetch;
+mod helpers;
 mod html;
-mod image;
 mod settings;
 mod url;
 
@@ -17,8 +17,8 @@ use aidoku::{
 
 use crate::{
     fetch::{Client, Fetch},
+    helpers::reload_image,
     html::GenManga,
-    image::reload_img,
     url::Url,
 };
 
@@ -57,7 +57,7 @@ impl Source for Jmtt {
         }
 
         if needs_chapters {
-            manga.chapters = Some(GenManga::chapters(&response)?);
+            manga.chapters = Some(GenManga::chapters(&response, &manga)?);
         }
 
         Ok(manga)
@@ -67,7 +67,7 @@ impl Source for Jmtt {
         let url = Url::chapter(chapter.key.clone())?.to_string();
         let response = Fetch::get(url)?.get_html()?;
 
-        GenManga::chapter(&response, &chapter.key)
+        GenManga::chapter(&response, &chapter)
     }
 }
 
@@ -108,7 +108,7 @@ impl PageImageProcessor for Jmtt {
             .and_then(|ctx| ctx.get("pieces").and_then(|v| v.parse().ok()))
             .unwrap_or(0);
 
-        Ok(reload_img(&response.image, pieces))
+        Ok(reload_image(&response.image, pieces))
     }
 }
 
