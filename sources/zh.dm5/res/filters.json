@@ -1,0 +1,184 @@
+[
+  {
+    "type": "select",
+    "title": "排序",
+    "options": [
+      "更新",
+      "熱門",
+      "新品"
+    ],
+    "ids": [
+      "s2",
+      "",
+      "s18"
+    ]
+  },
+  {
+    "type": "select",
+    "title": "題材",
+    "options": [
+      "全部",
+      "熱血",
+      "戀愛",
+      "校園",
+      "百合",
+      "彩虹",
+      "冒險",
+      "後宮",
+      "科幻",
+      "戰爭",
+      "懸疑",
+      "推理",
+      "搞笑",
+      "奇幻",
+      "魔法",
+      "恐怖",
+      "神鬼",
+      "歷史",
+      "同人",
+      "運動",
+      "紳士",
+      "機甲",
+      "限制級"
+    ],
+    "ids": [
+      "",
+      "rexue",
+      "aiqing",
+      "xiaoyuan",
+      "baihe",
+      "caihong",
+      "maoxian",
+      "hougong",
+      "kehuan",
+      "zhanzheng",
+      "xuanyi",
+      "zhentan",
+      "gaoxiao",
+      "qihuan",
+      "mofa",
+      "kongbu",
+      "dongfangshengui",
+      "lishi",
+      "tongren",
+      "jingji",
+      "jiecao",
+      "jizhan",
+      "tag61"
+    ]
+  },
+  {
+    "type": "select",
+    "title": "地區",
+    "options": [
+      "全部",
+      "港台",
+      "日韩",
+      "大陆",
+      "欧美"
+    ],
+    "ids": [
+      "",
+      "hktw",
+      "jpkr",
+      "china",
+      "euus"
+    ]
+  },
+  {
+    "type": "select",
+    "title": "受眾",
+    "options": [
+      "全部",
+      "少年向",
+      "少女向",
+      "青年向"
+    ],
+    "ids": [
+      "",
+      "shaonan",
+      "shaonv",
+      "qingnian"
+    ]
+  },
+  {
+    "type": "select",
+    "title": "收費",
+    "options": [
+      "全部",
+      "免费",
+      "付费",
+      "VIP付費"
+    ],
+    "ids": [
+      "",
+      "pay0",
+      "pay1",
+      "pay2"
+    ]
+  },
+  {
+    "type": "select",
+    "title": "字母",
+    "options": [
+      "全部",
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "H",
+      "I",
+      "J",
+      "K",
+      "L",
+      "M",
+      "N",
+      "O",
+      "P",
+      "Q",
+      "R",
+      "S",
+      "T",
+      "U",
+      "V",
+      "W",
+      "X",
+      "Y",
+      "Z",
+      "0-9"
+    ],
+    "ids": [
+      "",
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+      "l",
+      "m",
+      "n",
+      "o",
+      "p",
+      "q",
+      "r",
+      "s",
+      "t",
+      "u",
+      "v",
+      "w",
+      "x",
+      "y",
+      "z",
+      "0-9"
+    ]
+  }
+]
