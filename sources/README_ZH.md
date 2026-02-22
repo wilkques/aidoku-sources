@@ -27,12 +27,10 @@ aidoku package
 
 aidoku build package.aix --name "Wilkques Sources"
 
-cd public/
-
-aidoku serve sources/zh.jmtt-v2.aix
+aidoku serve package.aix
 ```
 
-在主機的瀏覽器上前往 `http://<IP 位址或 localhost>:8080/index.min.json`。確認數據能正常載入後，回到 iPhone 上的 Aidoku，將 `http://<IP 位址或 localhost>:8080/index.min.json` 加入到你的**來源清單（Source List）**中。
+在主機的瀏覽器上前往 `http://<IP 位址或 localhost>:8080/index.min.json`。確認資料能正常載入後，回到 iPhone 上的 Aidoku，將 `http://<IP 位址或 localhost>:8080/index.min.json` 加入到你的**來源清單（Source List）**中。
 
 注意： 你需要在防火牆設定中開放 8080 埠（Port）以允許連線（請參考 [開啟防火牆連接埠的步驟](#steps-to-open-a-firewall-port)）。
 
@@ -74,8 +72,8 @@ docker stop aidoku-sources
 
 ## Steps to Open a Firewall Port
 
-- Windows
-    按下 Win + R 鍵，輸入 `wf.msc 並按下 Enter。
+- Windows<br>
+    按下 Win + R 鍵，輸入 `wf.msc` 並按下 Enter。
 
     點選左側的 輸入規則 (Inbound Rules)，接著在右側操作面板點選 新增規則... (New Rule...)。
 

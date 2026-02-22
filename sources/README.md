@@ -27,9 +27,7 @@ aidoku package
 
 aidoku build package.aix --name "Wilkques Sources"
 
-cd public/
-
-aidoku serve sources/zh.jmtt-v2.aix
+aidoku serve package.aix
 ```
 
 Navigate to `http://<IP_ADDRESS or localhost>:8080/index.min.json` on your host's browser. Once you've confirmed the data is loading, return to Aidoku on your iPhone and add `http://<IP_ADDRESS or localhost>:8080/index.min.json` to your Source List.
@@ -74,8 +72,8 @@ docker stop aidoku-sources
 
 ### Steps to Open a Firewall Port
 
-- Windows
-    Press Win + R, type wf.msc, and hit Enter.
+- Windows<br>
+    Press Win + R, type `wf.msc`, and press Enter.
 
     Go to Inbound Rules (or Outbound, depending on your needs) and select New Rule...
 
