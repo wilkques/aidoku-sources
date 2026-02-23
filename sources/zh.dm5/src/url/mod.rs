@@ -78,10 +78,6 @@ pub enum Url {
     Chapter {
         id: String,
     },
-    ListType {
-        list_type: String,
-        page: String,
-    },
     Book {
         id: String,
     },
@@ -93,7 +89,7 @@ impl Url {
 
         match self {
             Self::Chapter { id } => {
-                format!("{}/chapter/{}", base_url, id)
+                format!("{}/{}", base_url, id)
             }
             Self::Book { id } => {
                 format!("{}/{}", base_url, id)
@@ -103,9 +99,6 @@ impl Url {
                     "{}/search?title={}&language=1&page={}",
                     base_url, query, page
                 )
-            }
-            Self::ListType { list_type, page } => {
-                format!("{}/{}?page={}", base_url, list_type, page)
             }
             Self::Filter {
                 main_sort,
@@ -120,7 +113,7 @@ impl Url {
             } => {
                 format!(
                     "{}/manhua{}{}{}{}{}{}{}{}{}",
-                    base_url, main_sort, tag, area, word, audience, pay, status, sort, page
+                    base_url, main_sort, area, word, tag, audience, pay, status, sort, page
                 )
             }
         }
@@ -161,12 +154,30 @@ impl Url {
                     });
                 }
                 FilterValue::Select { id, value } => match id.as_str() {
-                    "排序" => sort = format!("-{}", value.clone()),
+                    "排序" => {
+                        sort = if value.is_empty() {
+                            String::new()
+                        } else {
+                            format!("-{}", value.clone())
+                        }
+                    }
                     "題材" => tag = value.clone(),
                     "地區" => area = value.clone(),
-                    "進度" => status = format!("-{}", value.clone()),
+                    "進度" => {
+                        status = if value.is_empty() {
+                            String::new()
+                        } else {
+                            format!("-{}", value.clone())
+                        }
+                    }
                     "受眾" => audience = value.clone(),
-                    "收費" => pay = format!("-{}", value.clone()),
+                    "收費" => {
+                        pay = if value.is_empty() {
+                            String::new()
+                        } else {
+                            format!("-{}", value.clone())
+                        }
+                    }
                     "字母" => word = value.clone(),
                     _ => continue,
                 },

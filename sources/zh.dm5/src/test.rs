@@ -1,7 +1,8 @@
-#![expect(clippy::unwrap_used)]
+// #![expect(clippy::unwrap_used)]
 
-use super::*;
-use aidoku_test::aidoku_test;
+// use super::*;
+// use aidoku::{HashMap, PageContext};
+// use aidoku_test::aidoku_test;
 
 // #[aidoku_test]
 // fn test_get_search_manga_list() {
@@ -35,47 +36,46 @@ use aidoku_test::aidoku_test;
 //     panic!("完整結果: {:#?}", result);
 // }
 
-#[aidoku_test]
-fn test_get_manga_update() {
-    let source = Dm5::new();
+// #[aidoku_test]
+// fn test_get_manga_update() {
+//     let source = Dm5::new();
 
-    // 1. 建立一個假的 Manga 用於測試
-    let manga = Manga {
-        key: "manhua-zaidixiachengchadianbeixinrendehuobanshadiao-quekaoenhui-moxianzhuaidan-huodele-lv-9999-dehuobanmen-".to_string(), // 換成真實的漫畫 ID 以測試
-        title: "在地下城差點被信任的伙伴殺掉，卻靠恩惠「無限轉蛋」獲得了Lv9999的伙伴們，於是向前隊友和世界復仇&對他們說「死好」!".to_string(),
-        cover: Some("https://mhfm9tel.cdndm5.com/75/74167/20211218103817_180x240_32.jpg".to_string()),
-        url: Some("https://www.dm5.cn/book/manhua-zaidixiachengchadianbeixinrendehuobanshadiao-quekaoenhui-moxianzhuaidan-huodele-lv-9999-dehuobanmen-".to_string()),
-        ..Default::default()
-    };
+//     // 1. 建立一個假的 Manga 用於測試
+//     let manga = Manga {
+//         key: "manhua-zaidixiachengchadianbeixinrendehuobanshadiao-quekaoenhui-moxianzhuaidan-huodele-lv-9999-dehuobanmen-".to_string(), // 換成真實的漫畫 ID 以測試
+//         title: "在地下城差點被信任的伙伴殺掉，卻靠恩惠「無限轉蛋」獲得了Lv9999的伙伴們，於是向前隊友和世界復仇&對他們說「死好」!".to_string(),
+//         cover: Some("https://mhfm9tel.cdndm5.com/75/74167/20211218103817_180x240_32.jpg".to_string()),
+//         url: Some("https://www.dm5.cn/book/manhua-zaidixiachengchadianbeixinrendehuobanshadiao-quekaoenhui-moxianzhuaidan-huodele-lv-9999-dehuobanmen-".to_string()),
+//         ..Default::default()
+//     };
 
-    // 2. 傳入正確的三個參數
-    let result = source.get_manga_update(manga, true, true).unwrap();
+//     // 2. 傳入正確的三個參數
+//     let result = source.get_manga_update(manga, true, true).unwrap();
 
-    panic!("完整結果: {:#?}", result);
-}
+//     panic!("完整結果: {:#?}", result);
+// }
 
 // #[aidoku_test]
 // fn test_get_page_list() {
-//     let source = Mxshm::new();
+//     let source = Dm5::new();
 
 //     let manga = Manga {
-//         key: "1142".to_string(), // 換成真實的漫畫 ID 以測試
-//         title: "詛咒性轉物語".to_string(),
-//         cover: Some("https://www.jjmhw2.top/static/upload/book/1142/cover.jpg".to_string()),
+//         key: "manhua-zaidixiachengchadianbeixinrendehuobanshadiao-quekaoenhui-moxianzhuaidan-huodele-lv-9999-dehuobanmen-".to_string(), // 換成真實的漫畫 ID 以測試
+//         title: "在地下城差點被信任的伙伴殺掉，卻靠恩惠「無限轉蛋」獲得了Lv9999的伙伴們，於是向前隊友和世界復仇&對他們說「死好」!".to_string(),
+//         cover: Some("https://mhfm9tel.cdndm5.com/75/74167/20211218103817_180x240_32.jpg".to_string()),
+//         url: Some("https://www.dm5.cn/book/manhua-zaidixiachengchadianbeixinrendehuobanshadiao-quekaoenhui-moxianzhuaidan-huodele-lv-9999-dehuobanmen-".to_string()),
 //         ..Default::default()
 //     };
 
 //     let chapter = Chapter {
-//         key: "52752".to_string(), // 換成真實的漫畫 ID 以測試
-//         title: Some("第1話-睡醒變成發春女".to_string()),
+//         key: "m1217932".to_string(), // 換成真實的漫畫 ID 以測試
+//         title: Some("第1话".to_string()),
 //         chapter_number: Some(1.0),
 //         ..Default::default()
 //     };
 
 //     // 2. 傳入正確的三個參數
-//     let result = source
-//         .get_page_list(manga, chapter)
-//         .unwrap();
+//     let result = source.get_page_list(manga, chapter).unwrap();
 
 //     panic!("完整結果: {:#?}", result);
 // }
@@ -90,4 +90,20 @@ fn test_get_manga_update() {
 //     let result = source.handle_deep_link(valid_url).unwrap();
 
 //     panic!("✅ 成功解析 DeepLink: {:?}", result);
+// }
+
+// #[aidoku_test]
+// fn test_get_image_request() {
+//     let source = Dm5::new();
+
+//     // 方法 1: 模擬有 is_chapter context 的場景（從 chapter 頁面擷取圖片）
+//     let mut ctx: PageContext = HashMap::new();
+//     ctx.insert("is_chapter".to_string(), "true".to_string());
+
+//     // 使用一個真實的章節頁面 URL
+//     let url = Url::chapter("m1217932-p2".to_string()).unwrap().to_string();
+
+//     let result = source.get_image_request(url, Some(ctx));
+
+//     panic!("is_chapter=true 結果: {:#?}", result);
 // }

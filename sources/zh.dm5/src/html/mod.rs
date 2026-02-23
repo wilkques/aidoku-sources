@@ -5,13 +5,13 @@ use aidoku::{
     prelude::*,
 };
 
-use crate::url::Url;
+use crate::{fetch::Fetch, js_packer, settings, url::Url};
 
 pub trait GenManga {
     fn list(&self) -> Result<MangaPageResult>;
     fn detail(&self, manga: &mut Manga) -> Result<()>;
     fn chapters(&self) -> Result<Vec<Chapter>>;
-    fn chapter(&self) -> Result<Vec<Page>>;
+    fn chapter(url: String, body: String) -> Result<Vec<Page>>;
 }
 
 impl GenManga for Document {
@@ -125,8 +125,6 @@ impl GenManga for Document {
             _ => MangaStatus::Unknown,
         };
 
-        manga.viewer = Viewer::Webtoon;
-
         Ok(())
     }
 
@@ -134,58 +132,86 @@ impl GenManga for Document {
         let mut chapters: Vec<Chapter> = Vec::new();
 
         let items = self
-            .select("#detail-list-select>li>a")
+            .select(".detail-list-select>li,.detail-list-select>.chapteritem>li")
             .ok_or_else(|| error!("No chapter items found"))?;
 
-        for (index, item) in items.enumerate() {
-            let href = item.attr("href").unwrap_or_default();
+        for item in items {
+            let html_a_tag = item
+                .select_first("a")
+                .ok_or_else(|| error!("No link found"))?;
 
-            if href.is_empty() {
-                continue;
-            }
-
-            let key = href.split("/").last().unwrap_or_default().to_string();
+            let key = html_a_tag
+                .attr("href")
+                .ok_or_else(|| error!("No href found"))?
+                .trim_matches('/')
+                .to_string();
 
             let url = Url::chapter(key.clone())?.to_string();
 
-            let title = Some(item.text().unwrap_or_default().trim().to_string());
-
-            let chapter_number = Some((index + 1) as f32);
+            let title = Some(html_a_tag.own_text().unwrap_or_default().trim().to_string());
 
             chapters.push(Chapter {
                 key,
                 title,
-                chapter_number,
                 url: Some(url),
                 ..Default::default()
             });
         }
 
-        chapters.reverse();
+        let total_chapters = chapters.len();
+        for (index, chapter) in chapters.iter_mut().enumerate() {
+            chapter.chapter_number = Some((total_chapters - index) as f32);
+        }
 
         Ok(chapters)
     }
 
-    fn chapter(&self) -> Result<Vec<Page>> {
+    fn chapter(url: String, body: String) -> Result<Vec<Page>> {
+        // Extract DM5 variables from the chapter page
+        let cid =
+            js_packer::extract_dm5_var(&body, "DM5_CID").ok_or_else(|| error!("No DM5_CID"))?;
+        let image_count: usize = js_packer::extract_dm5_var(&body, "DM5_IMAGE_COUNT")
+            .ok_or_else(|| error!("No DM5_IMAGE_COUNT"))?
+            .parse()
+            .map_err(|_| error!("Bad IMAGE_COUNT"))?;
+        let mid =
+            js_packer::extract_dm5_var(&body, "DM5_MID").ok_or_else(|| error!("No DM5_MID"))?;
+        let viewsign = js_packer::extract_dm5_var(&body, "DM5_VIEWSIGN")
+            .ok_or_else(|| error!("No DM5_VIEWSIGN"))?;
+        let viewsign_dt = js_packer::extract_dm5_var(&body, "DM5_VIEWSIGN_DT")
+            .ok_or_else(|| error!("No DM5_VIEWSIGN_DT"))?;
+        let dm5_key = js_packer::extract_dm5_key(&body).unwrap_or("");
+
+        let base_url = settings::get_base_url();
         let mut pages: Vec<Page> = Vec::new();
+        let mut api_page = 1;
 
-        let items = self
-            .select(".comicpage>div>img,#cp_img>img")
-            .ok_or_else(|| error!("No chapter img found"))?;
+        while pages.len() < image_count {
+            let api_url = format!(
+                "{}/chapterfun.ashx?cid={}&page={}&key={}&language=1&gtk=6&_cid={}&_mid={}&_dt={}&_sign={}",
+                base_url, cid, api_page, dm5_key, cid, mid, viewsign_dt, viewsign
+            );
 
-        for item in items {
-            let href = item.attr("data-original").unwrap_or_default();
+            let packed = Fetch::get(api_url)?.header("Referer", &url).string()?;
 
-            if href.is_empty() {
-                continue;
+            let decoded =
+                js_packer::unpack(&packed).ok_or_else(|| error!("Failed to unpack JS"))?;
+
+            let urls = js_packer::extract_image_urls(&decoded)
+                .ok_or_else(|| error!("Failed to extract image URLs"))?;
+
+            if urls.is_empty() {
+                break;
             }
 
-            let url = href.trim().to_string();
+            for img_url in &urls {
+                pages.push(Page {
+                    content: PageContent::url(img_url.clone()),
+                    ..Default::default()
+                });
+            }
 
-            pages.push(Page {
-                content: PageContent::url(url),
-                ..Default::default()
-            })
+            api_page += urls.len();
         }
 
         Ok(pages)

@@ -3,13 +3,15 @@ extern crate alloc;
 
 mod fetch;
 mod html;
+mod js_packer;
 mod settings;
 mod url;
 
 use aidoku::{
-    BaseUrlProvider, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, Manga, MangaPageResult,
-    Page, Result, Source,
+    BaseUrlProvider, Chapter, FilterValue, ImageRequestProvider, Manga, MangaPageResult, Page,
+    PageContext, Result, Source,
     alloc::{String, Vec, string::ToString as _},
+    imports::{html::Document, net::Request},
     prelude::*,
 };
 
@@ -61,25 +63,9 @@ impl Source for Dm5 {
     fn get_page_list(&self, _: Manga, chapter: Chapter) -> Result<Vec<Page>> {
         let url = Url::chapter(chapter.key.clone())?.to_string();
 
-        let response = Fetch::get(url)?.html()?;
+        let response = Fetch::get(url.clone())?.string()?;
 
-        GenManga::chapter(&response)
-    }
-}
-
-impl DeepLinkHandler for Dm5 {
-    fn handle_deep_link(&self, url: String) -> Result<Option<DeepLinkResult>> {
-        if url.contains("/book/") {
-            let key = url.split("/book/").last().unwrap_or_default().to_string();
-
-            if key.is_empty() {
-                return Ok(None);
-            }
-
-            return Ok(Some(DeepLinkResult::Manga { key }));
-        }
-
-        Ok(None)
+        <Document as GenManga>::chapter(url, response)
     }
 }
 
@@ -89,7 +75,27 @@ impl BaseUrlProvider for Dm5 {
     }
 }
 
-register_source!(Dm5, DeepLinkHandler, BaseUrlProvider);
+impl ImageRequestProvider for Dm5 {
+    fn get_image_request(&self, url: String, _context: Option<PageContext>) -> Result<Request> {
+        let cid = url
+            .split("cid=")
+            .nth(1)
+            .and_then(|s| s.split('&').next())
+            .unwrap_or("");
+
+        let referer = if cid.is_empty() {
+            url.clone()
+        } else {
+            Url::chapter(format!("m{}", cid))?.to_string()
+        };
+
+        Ok(Fetch::get(url)?
+            .header("Accept-Language", "zh-TW")
+            .header("Referer", &referer))
+    }
+}
+
+register_source!(Dm5, BaseUrlProvider, ImageRequestProvider);
 
 #[cfg(test)]
 mod test;
