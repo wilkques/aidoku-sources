@@ -81,6 +81,9 @@ pub enum Url {
     Book {
         id: String,
     },
+    Rank {
+        id: String,
+    },
 }
 
 impl Url {
@@ -115,6 +118,13 @@ impl Url {
                     "{}/manhua{}{}{}{}{}{}{}{}{}",
                     base_url, main_sort, area, word, tag, audience, pay, status, sort, page
                 )
+            }
+            Self::Rank { id } => {
+                if id != "new" {
+                    return format!("{}/manhua-rank/?t={}", base_url, id);
+                }
+
+                format!("{}/manhua-{}", base_url, id)
             }
         }
     }
@@ -234,5 +244,9 @@ impl Url {
 
     pub fn chapter(id: String) -> Result<Self> {
         Ok(Self::Chapter { id })
+    }
+
+    pub fn rank(id: String) -> Result<Self> {
+        Ok(Self::Rank { id })
     }
 }

@@ -1,6 +1,7 @@
 #![cfg_attr(not(test), no_std)]
 extern crate alloc;
 
+mod Home;
 mod fetch;
 mod html;
 mod js_packer;
@@ -8,8 +9,8 @@ mod settings;
 mod url;
 
 use aidoku::{
-    BaseUrlProvider, Chapter, FilterValue, ImageRequestProvider, Manga, MangaPageResult, Page,
-    PageContext, Result, Source,
+    BaseUrlProvider, Chapter, FilterValue, ImageRequestProvider, Listing, ListingProvider, Manga,
+    MangaPageResult, Page, PageContext, Result, Source,
     alloc::{String, Vec, string::ToString as _},
     imports::{html::Document, net::Request},
     prelude::*,
@@ -95,7 +96,32 @@ impl ImageRequestProvider for Dm5 {
     }
 }
 
-register_source!(Dm5, BaseUrlProvider, ImageRequestProvider);
+impl ListingProvider for Dm5 {
+    fn get_manga_list(&self, listing: Listing, page: i32) -> Result<MangaPageResult> {
+        let rank = match listing.id.as_str() {
+            "dailymanga" => "new",
+            "cnmanga" => "1",
+            "jpmanga" => "2",
+            "allmanga" => "3",
+            "risemanga" => "7",
+            _ => bail!("Invalid listing"),
+        };
+
+        let url = Url::rank(rank.to_string())?.to_string();
+
+        let response = Fetch::get(url)?.html()?;
+
+        GenManga::list(&response)
+    }
+}
+
+register_source!(
+    Dm5,
+    BaseUrlProvider,
+    ImageRequestProvider,
+    Home,
+    ListingProvider
+);
 
 #[cfg(test)]
 mod test;

@@ -76,7 +76,7 @@ impl GenManga for Document {
         manga.title = self
             .select_first("div.banner_detail_form > div.info > p.title")
             .ok_or_else(|| error!("No title found"))?
-            .text()
+            .own_text()
             .ok_or_else(|| error!("No title found"))?
             .trim()
             .to_string();
@@ -148,7 +148,23 @@ impl GenManga for Document {
 
             let url = Url::chapter(key.clone())?.to_string();
 
-            let title = Some(html_a_tag.own_text().unwrap_or_default().trim().to_string());
+            let mut title_str = html_a_tag
+                .own_text()
+                .unwrap_or_else(|| {
+                    html_a_tag
+                        .select_first(".info > .title")
+                        .unwrap()
+                        .own_text()
+                        .unwrap_or_default()
+                })
+                .trim()
+                .to_string();
+
+            if html_a_tag.select_first(".info > .detail-lock").is_some() {
+                title_str.push_str(" --鎖章節--");
+            }
+
+            let title = Some(title_str);
 
             chapters.push(Chapter {
                 key,
@@ -156,11 +172,6 @@ impl GenManga for Document {
                 url: Some(url),
                 ..Default::default()
             });
-        }
-
-        let total_chapters = chapters.len();
-        for (index, chapter) in chapters.iter_mut().enumerate() {
-            chapter.chapter_number = Some((total_chapters - index) as f32);
         }
 
         Ok(chapters)
