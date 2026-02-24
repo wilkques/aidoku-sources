@@ -1,11 +1,11 @@
 #![cfg_attr(not(test), no_std)]
 extern crate alloc;
 
-mod Home;
 mod fetch;
 mod html;
 mod js_packer;
 mod settings;
+mod template;
 mod url;
 
 use aidoku::{
@@ -19,6 +19,7 @@ use aidoku::{
 use crate::fetch::Fetch;
 use crate::html::GenManga;
 use crate::url::Url;
+use aidoku::Home;
 
 struct Dm5;
 
