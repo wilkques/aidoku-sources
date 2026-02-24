@@ -189,6 +189,7 @@ impl Url {
                         }
                     }
                     "字母" => word = value.clone(),
+                    "genre" => tag = value.clone(),
                     _ => continue,
                 },
                 _ => continue,
