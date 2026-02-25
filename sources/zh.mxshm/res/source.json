@@ -2,7 +2,7 @@
   "info": {
     "id": "zh.mxshm",
     "name": "漫小肆韩漫",
-    "version": 2,
+    "version": 3,
     "urls": [
       "https://www.mxs10.cc",
       "https://www.mxs11.cc",
@@ -23,12 +23,14 @@
       "https://www.wzd1.cc"
     ],
     "contentRating": 2,
-    "languages": ["zh"]
+    "languages": [
+      "zh"
+    ]
   },
-	"config": {
-		"allowsBaseUrlSelect": true,
-		"hidesFiltersWhileSearching": true,
-		"supportsAuthorSearch": true,
-		"supportsTagSearch": true
-	}
+  "config": {
+    "allowsBaseUrlSelect": true,
+    "hidesFiltersWhileSearching": true,
+    "supportsAuthorSearch": true,
+    "supportsTagSearch": true
+  }
 }

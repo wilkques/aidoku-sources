@@ -2,6 +2,7 @@
 extern crate alloc;
 
 mod fetch;
+mod home;
 mod html;
 mod settings;
 mod url;
@@ -33,7 +34,7 @@ impl Source for Mxshm {
         let url = Url::filters(query.as_deref(), page, &filters)?.to_string();
 
         let response = Fetch::get(url)?.html()?;
-        
+
         GenManga::list(&response)
     }
 
@@ -89,7 +90,7 @@ impl BaseUrlProvider for Mxshm {
     }
 }
 
-register_source!(Mxshm, DeepLinkHandler, BaseUrlProvider);
+register_source!(Mxshm, DeepLinkHandler, BaseUrlProvider, Home);
 
 #[cfg(test)]
 mod test;

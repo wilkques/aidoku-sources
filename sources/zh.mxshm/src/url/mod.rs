@@ -87,10 +87,10 @@ impl Url {
                     "地区" => area = value.clone(),
                     "进度" => end = value.clone(),
                     "列表" => {
-                        return Ok(Self::ListType { 
-                            list_type: value.clone(), 
-                            page 
-                        })
+                        return Ok(Self::ListType {
+                            list_type: value.clone(),
+                            page,
+                        });
                     }
                     _ => continue,
                 },
@@ -119,5 +119,12 @@ impl Url {
 
     pub fn chapter(id: String) -> Result<Self> {
         Ok(Self::Chapter { id })
+    }
+
+    pub fn rank(page: i32) -> Result<Self> {
+        Ok(Self::ListType {
+            list_type: "rank".to_string(),
+            page,
+        })
     }
 }

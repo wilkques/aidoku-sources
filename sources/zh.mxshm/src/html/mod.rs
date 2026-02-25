@@ -1,5 +1,8 @@
 use aidoku::{
-    Chapter, Manga, MangaPageResult, MangaStatus, Page, PageContent, Result, Viewer, alloc::{String, Vec, string::ToString as _}, imports::html::Document, prelude::*
+    Chapter, Manga, MangaPageResult, MangaStatus, Page, PageContent, Result, Viewer,
+    alloc::{String, Vec, string::ToString as _},
+    imports::html::Document,
+    prelude::*,
 };
 
 use crate::url::Url;
@@ -65,7 +68,7 @@ impl GenManga for Document {
             has_next_page: !mangas.is_empty(),
         })
     }
-    
+
     fn detail(&self, manga: &mut Manga) -> Result<()> {
         manga.cover = self
             .select_first(".banner_detail_form>.cover>img")
