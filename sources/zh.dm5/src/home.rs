@@ -18,7 +18,7 @@ impl Home for Dm5 {
                 HomeComponent {
                     title: Some("今日更新".to_string()),
                     subtitle: None,
-                    value: HomeComponentValue::empty_manga_list(),
+                    value: HomeComponentValue::empty_big_scroller(),
                 },
                 HomeComponent {
                     title: Some("日漫排行".to_string()),

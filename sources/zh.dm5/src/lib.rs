@@ -2,10 +2,10 @@
 extern crate alloc;
 
 mod fetch;
+mod home;
 mod html;
 mod js_packer;
 mod settings;
-mod template;
 mod url;
 
 use aidoku::{
@@ -19,7 +19,6 @@ use aidoku::{
 use crate::fetch::Fetch;
 use crate::html::GenManga;
 use crate::url::Url;
-use aidoku::Home;
 
 struct Dm5;
 
