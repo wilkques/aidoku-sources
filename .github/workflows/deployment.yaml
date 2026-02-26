@@ -58,7 +58,7 @@ jobs:
           for src in ./sources/*/; do
             (
               cd "$src"
-              export CARGO_TARGET_DIR="target"
+              rm -f ../../target/wasm32-unknown-unknown/release/*.wasm
               aidoku package
             )
           done
