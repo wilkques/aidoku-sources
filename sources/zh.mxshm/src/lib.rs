@@ -97,17 +97,14 @@ impl ListingProvider for Mxshm {
                 id: "列表".to_string(),
                 value: "update".to_string(),
             }],
-            "popularitymanga" => vec![FilterValue::Select {
-                id: "列表".to_string(),
-                value: "update".to_string(),
-            }],
-            "finishmanga" => vec![FilterValue::Select {
+            "allmanga" => vec![],
+            "serialised" => vec![FilterValue::Select {
                 id: "进度".to_string(),
                 value: "0".to_string(),
             }],
-            "recommendmanga" => vec![FilterValue::Select {
-                id: "列表".to_string(),
-                value: "update".to_string(),
+            "completed" => vec![FilterValue::Select {
+                id: "进度".to_string(),
+                value: "1".to_string(),
             }],
             _ => bail!("Invalid listing"),
         };

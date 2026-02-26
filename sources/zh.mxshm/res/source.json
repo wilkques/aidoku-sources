@@ -2,7 +2,7 @@
   "info": {
     "id": "zh.mxshm",
     "name": "漫小肆韩漫",
-    "version": 3,
+    "version": 4,
     "urls": [
       "https://www.mxs10.cc",
       "https://www.mxs11.cc",
@@ -27,6 +27,24 @@
       "zh"
     ]
   },
+  "listings": [
+    {
+      "id": "dailymanga",
+      "name": "今日更新"
+    },
+    {
+      "id": "allmanga",
+      "name": "全部漫畫"
+    },
+    {
+      "id": "serialised",
+      "name": "連載中"
+    },
+    {
+      "id": "completed",
+      "name": "已完結"
+    }
+  ],
   "config": {
     "allowsBaseUrlSelect": true,
     "hidesFiltersWhileSearching": true,
