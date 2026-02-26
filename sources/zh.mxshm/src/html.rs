@@ -12,6 +12,7 @@ pub trait GenManga {
     fn detail(&self, manga: &mut Manga) -> Result<()>;
     fn chapters(&self) -> Result<Vec<Chapter>>;
     fn chapter(&self) -> Result<Vec<Page>>;
+    fn home(&self) -> Result<Vec<Vec<Manga>>>;
 }
 
 impl GenManga for Document {
@@ -184,5 +185,92 @@ impl GenManga for Document {
         }
 
         Ok(pages)
+    }
+
+    fn home(&self) -> Result<Vec<Vec<Manga>>> {
+        let mut categories: Vec<Vec<Manga>> = Vec::new();
+
+        let items = self
+            .select(".mh-list > li")
+            .ok_or_else(|| error!("No manga items found"))?;
+
+        for item in items {
+            let mut mangas: Vec<Manga> = Vec::new();
+
+            if let Some(nodes) = item.select(".mh-item, .mh-item-tip") {
+                for node in nodes {
+                    let id_attr = node.select_first("a").and_then(|a| a.attr("href"));
+
+                    if id_attr.is_none() {
+                        continue;
+                    }
+
+                    let id = id_attr
+                        .unwrap()
+                        .split('/')
+                        .last()
+                        .unwrap_or_default()
+                        .to_string();
+
+                    if id.is_empty() {
+                        continue;
+                    }
+
+                    let url = match Url::book(id.clone()) {
+                        Ok(u) => u.to_string(),
+                        Err(_) => continue,
+                    };
+
+                    let cover = node
+                        .select_first(".mh-cover")
+                        .and_then(|p| p.attr("style"))
+                        .unwrap_or_default()
+                        .replace("background-image: url(", "")
+                        .replace(")", "");
+
+                    let title = node
+                        .select_first(".title > a")
+                        .and_then(|a| a.text())
+                        .unwrap_or_default()
+                        .trim()
+                        .to_string();
+
+                    let authors = node
+                        .select_first(
+                            ".zl > span:nth-child(2) > a, .author > span:nth-child(2) > a",
+                        )
+                        .and_then(|element| element.text())
+                        .map(|text| {
+                            text.replace("&amp;", "&")
+                                .split('&')
+                                .map(|a| a.trim().to_string())
+                                .filter(|a| !a.is_empty())
+                                .collect::<Vec<String>>()
+                        });
+
+                    let description = node
+                        .select_first(".chapter")
+                        .and_then(|element| element.text())
+                        .map(|text| text.trim().to_string());
+
+                    let viewer = Viewer::Webtoon;
+
+                    mangas.push(Manga {
+                        key: id,
+                        cover: Some(cover),
+                        title,
+                        url: Some(url),
+                        authors,
+                        description,
+                        viewer,
+                        ..Default::default()
+                    });
+                }
+            }
+
+            categories.push(mangas);
+        }
+
+        Ok(categories)
     }
 }

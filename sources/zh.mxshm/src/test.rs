@@ -1,6 +1,7 @@
-#![expect(clippy::unwrap_used)]
+// #![expect(clippy::unwrap_used)]
 
 // use super::*;
+// use aidoku::Home;
 // use aidoku_test::aidoku_test;
 
 // #[aidoku_test]
@@ -10,15 +11,15 @@
 //     let filters = vec![
 //         FilterValue::Select {
 //             id: String::from("列表"),
-//             value: String::from("update"), 
+//             value: String::from("update"),
 //         },
 //         // FilterValue::Select {
 //         //     id: String::from("题材"),
-//         //     value: String::from("性感"), 
+//         //     value: String::from("性感"),
 //         // },
 //         // FilterValue::Select {
 //         //     id: String::from("地区"),
-//         //     value: String::from("2"), 
+//         //     value: String::from("2"),
 //         // },
 //         // FilterValue::Select {
 //         //     id: String::from("进度"),
@@ -94,4 +95,13 @@
 //     let result = source.handle_deep_link(valid_url).unwrap();
 
 //     panic!("✅ 成功解析 DeepLink: {:?}", result);
+// }
+
+// #[aidoku_test]
+// fn test_get_home() {
+//     let source = Mxshm::new();
+
+//     let result = source.get_home();
+
+//     panic!("✅ 成功解析 DeepLink: {:#?}", result);
 // }

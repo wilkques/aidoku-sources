@@ -23,12 +23,12 @@ impl Home for Mxshm {
                 HomeComponent {
                     title: Some("人氣榜".to_string()),
                     subtitle: None,
-                    value: HomeComponentValue::empty_manga_list(),
+                    value: HomeComponentValue::empty_big_scroller(),
                 },
                 HomeComponent {
                     title: Some("推薦榜".to_string()),
                     subtitle: None,
-                    value: HomeComponentValue::empty_manga_list(),
+                    value: HomeComponentValue::empty_big_scroller(),
                 },
                 HomeComponent {
                     title: Some("完結榜".to_string()),
@@ -40,14 +40,14 @@ impl Home for Mxshm {
 
         let request = Fetch::get(Url::rank(1)?.to_string())?.html()?;
 
-        let binding = GenManga::list(&request)?;
+        let binding = GenManga::home(&request)?;
 
-        let mut chunks = binding.entries.chunks(10).map(|chunk| chunk.to_vec());
+        let mut chunks = binding.into_iter();
 
         let dailymanga = chunks.next().unwrap_or_default();
         let popularitymanga = chunks.next().unwrap_or_default();
-        let recommendmanga = chunks.next().unwrap_or_default();
         let finishmanga = chunks.next().unwrap_or_default();
+        let recommendmanga = chunks.next().unwrap_or_default();
 
         let mut components = Vec::new();
 
@@ -55,15 +55,9 @@ impl Home for Mxshm {
             components.push(HomeComponent {
                 title: Some("今日更新".to_string()),
                 subtitle: None,
-                value: HomeComponentValue::MangaList {
-                    ranking: true,
-                    page_size: Some(3),
+                value: HomeComponentValue::BigScroller {
                     entries: dailymanga.into_iter().map(|manga| manga.into()).collect(),
-                    listing: Some(Listing {
-                        id: "dailymanga".to_string(),
-                        name: "今日更新".to_string(),
-                        kind: ListingKind::Default,
-                    }),
+                    auto_scroll_interval: Some(8.0),
                 },
             });
         }
@@ -72,18 +66,12 @@ impl Home for Mxshm {
             components.push(HomeComponent {
                 title: Some("人氣榜".to_string()),
                 subtitle: None,
-                value: HomeComponentValue::MangaList {
-                    ranking: true,
-                    page_size: Some(3),
+                value: HomeComponentValue::BigScroller {
                     entries: popularitymanga
                         .into_iter()
                         .map(|manga| manga.into())
                         .collect(),
-                    listing: Some(Listing {
-                        id: "popularitymanga".to_string(),
-                        name: "人氣榜".to_string(),
-                        kind: ListingKind::Default,
-                    }),
+                    auto_scroll_interval: Some(8.0),
                 },
             });
         }
@@ -92,18 +80,12 @@ impl Home for Mxshm {
             components.push(HomeComponent {
                 title: Some("推薦榜".to_string()),
                 subtitle: None,
-                value: HomeComponentValue::MangaList {
-                    ranking: true,
-                    page_size: Some(3),
+                value: HomeComponentValue::BigScroller {
                     entries: recommendmanga
                         .into_iter()
                         .map(|manga| manga.into())
                         .collect(),
-                    listing: Some(Listing {
-                        id: "recommendmanga".to_string(),
-                        name: "推薦榜".to_string(),
-                        kind: ListingKind::Default,
-                    }),
+                    auto_scroll_interval: Some(8.0),
                 },
             });
         }

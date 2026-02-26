@@ -92,6 +92,13 @@ impl Url {
                             page,
                         });
                     }
+                    "author" => {
+                        return Ok(Self::Search {
+                            query: encode_uri(value.clone()),
+                            page,
+                        });
+                    }
+                    "genre" => tag = value.clone(),
                     _ => continue,
                 },
                 _ => continue,

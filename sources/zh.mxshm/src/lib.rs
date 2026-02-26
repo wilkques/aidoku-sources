@@ -8,9 +8,9 @@ mod settings;
 mod url;
 
 use aidoku::{
-    BaseUrlProvider, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, Manga, MangaPageResult,
-    Page, Result, Source,
-    alloc::{String, Vec, string::ToString as _},
+    BaseUrlProvider, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, Listing,
+    ListingProvider, Manga, MangaPageResult, Page, Result, Source,
+    alloc::{String, Vec, string::ToString as _, vec},
     prelude::*,
 };
 
@@ -90,7 +90,43 @@ impl BaseUrlProvider for Mxshm {
     }
 }
 
-register_source!(Mxshm, DeepLinkHandler, BaseUrlProvider, Home);
+impl ListingProvider for Mxshm {
+    fn get_manga_list(&self, listing: Listing, page: i32) -> Result<MangaPageResult> {
+        let filters = match listing.id.as_str() {
+            "dailymanga" => vec![FilterValue::Select {
+                id: "列表".to_string(),
+                value: "update".to_string(),
+            }],
+            "popularitymanga" => vec![FilterValue::Select {
+                id: "列表".to_string(),
+                value: "update".to_string(),
+            }],
+            "finishmanga" => vec![FilterValue::Select {
+                id: "进度".to_string(),
+                value: "0".to_string(),
+            }],
+            "recommendmanga" => vec![FilterValue::Select {
+                id: "列表".to_string(),
+                value: "update".to_string(),
+            }],
+            _ => bail!("Invalid listing"),
+        };
+
+        let url = Url::filters(None, page, &filters)?.to_string();
+
+        let response = Fetch::get(url)?.html()?;
+
+        GenManga::list(&response)
+    }
+}
+
+register_source!(
+    Mxshm,
+    DeepLinkHandler,
+    BaseUrlProvider,
+    Home,
+    ListingProvider
+);
 
 #[cfg(test)]
 mod test;
