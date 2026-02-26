@@ -58,8 +58,8 @@ jobs:
           for src in ./sources/*/; do
             (
               cd "$src"
+              export CARGO_TARGET_DIR="target"
               aidoku package
-              rm -rf ./target
             )
           done
       - name: Build source list
