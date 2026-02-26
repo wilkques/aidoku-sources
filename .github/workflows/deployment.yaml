@@ -59,6 +59,7 @@ jobs:
             (
               cd "$src"
               aidoku package
+              rm -rf ./target
             )
           done
       - name: Build source list
