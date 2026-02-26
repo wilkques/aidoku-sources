@@ -4,7 +4,7 @@ on:
     branches:
       - master
     paths:
-      - "sources/**"
+      - "sources/**/**"
       - ".github/workflows/deployment.yaml"
 
 concurrency:
@@ -55,7 +55,7 @@ jobs:
           fi
       - name: Build sources
         run: |
-          for src in ./sources/*/; do
+          for src in ./sources/*/*; do
             (
               cd "$src"
               aidoku package
