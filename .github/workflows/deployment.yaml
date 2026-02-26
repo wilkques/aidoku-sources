@@ -58,7 +58,7 @@ jobs:
           for src in ./sources/*/; do
             (
               cd "$src"
-              rm -f ../../target/wasm32-unknown-unknown/release/*
+              rm -rf ../../target/wasm32-unknown-unknown/release/*
               aidoku package
             )
           done
