@@ -58,6 +58,41 @@ const FILTER_WORDS: &[&str] = &[
     "s", "t", "u", "v", "w", "x", "y", "z", "0-9",
 ];
 
+const OPTIONS_TAGS: &[&str] = &[
+    "全部",
+    "热血",
+    "恋爱",
+    "校园",
+    "百合",
+    "彩虹",
+    "冒险",
+    "后宫",
+    "科幻",
+    "战争",
+    "悬疑",
+    "推理",
+    "搞笑",
+    "奇幻",
+    "魔法",
+    "恐怖",
+    "神鬼",
+    "历史",
+    "同人",
+    "运动",
+    "绅士",
+    "机甲",
+    "限制级",
+];
+
+const OPTIONS_AREAS: &[&str] = &["全部", "港台", "日韩", "大陆", "欧美"];
+
+const OPTIONS_AUDIENCES: &[&str] = &["全部", "少年向", "少女向", "青年向"];
+
+const OPTIONS_WORDS: &[&str] = &[
+    "全部", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q",
+    "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0-9",
+];
+
 #[derive(Clone)]
 pub enum Url {
     Filter {
@@ -137,16 +172,6 @@ impl Url {
             });
         }
 
-        /// 透過 filter_ids 的 index 查找對應的內部 id
-        fn convert(value: &str, filter_ids: &[&str], internal_ids: &[&str]) -> String {
-            filter_ids
-                .iter()
-                .position(|&id| id == value)
-                .and_then(|idx| internal_ids.get(idx))
-                .map(|&s| s.to_string())
-                .unwrap_or_default()
-        }
-
         let mut sort = String::from("");
         let mut tag = String::from("");
         let mut area = String::from("");
@@ -171,7 +196,12 @@ impl Url {
                             format!("-{}", value.clone())
                         }
                     }
-                    "題材" => tag = value.clone(),
+                    "題材" => {
+                        tag = {
+                            aidoku::println!("match tag: {}", value.clone());
+                            value.clone()
+                        }
+                    }
                     "地區" => area = value.clone(),
                     "進度" => {
                         status = if value.is_empty() {
@@ -212,12 +242,28 @@ impl Url {
             _ => "-list".to_string(), // 2+ 個篩選 → 固定 "list-"
         };
 
-        // 2+ 個篩選條件 → 轉換成內部 id
-        if active > 1 {
-            tag = convert(&tag, FILTER_TAGS, TAGS);
-            area = convert(&area, FILTER_AREAS, AREAS);
-            audience = convert(&audience, FILTER_AUDIENCES, AUDIENCES);
-            word = convert(&word, FILTER_WORDS, WORDS);
+        // 透過 options 的 index 查找對應的 ids 或內部 id
+        let convert = |value: &str, options: &[&str], target_ids: &[&str]| {
+            options
+                .iter()
+                .position(|&opt| opt == value)
+                .and_then(|idx| target_ids.get(idx))
+                .map(|&s| s.to_string())
+                .unwrap_or_default()
+        };
+
+        // 根據 active 數量決定轉換到外部 id (`rexue`) 還是內部 id (`tag31`)
+        if active > 0 {
+            let (tags, areas, audiences, words) = if active == 1 {
+                (FILTER_TAGS, FILTER_AREAS, FILTER_AUDIENCES, FILTER_WORDS)
+            } else {
+                (TAGS, AREAS, AUDIENCES, WORDS)
+            };
+
+            tag = convert(&tag, OPTIONS_TAGS, tags);
+            area = convert(&area, OPTIONS_AREAS, areas);
+            audience = convert(&audience, OPTIONS_AUDIENCES, audiences);
+            word = convert(&word, OPTIONS_WORDS, words);
         }
 
         let prefix = |s: String| if s.is_empty() { s } else { format!("-{s}") };

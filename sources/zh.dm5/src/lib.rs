@@ -2,9 +2,9 @@
 extern crate alloc;
 
 mod fetch;
+mod helpers;
 mod home;
 mod html;
-mod js_packer;
 mod settings;
 mod url;
 
@@ -98,6 +98,10 @@ impl ImageRequestProvider for Dm5 {
 
 impl ListingProvider for Dm5 {
     fn get_manga_list(&self, listing: Listing, page: i32) -> Result<MangaPageResult> {
+        if page > 1 {
+            return Ok(MangaPageResult::default());
+        }
+
         let rank = match listing.id.as_str() {
             "dailymanga" => "new",
             "cnmanga" => "1",

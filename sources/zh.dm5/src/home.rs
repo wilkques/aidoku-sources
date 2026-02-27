@@ -72,7 +72,7 @@ impl Home for Dm5 {
                 subtitle: None,
                 value: HomeComponentValue::MangaList {
                     ranking: true,
-                    page_size: Some(3),
+                    page_size: Some(1),
                     entries: dailymanga.into_iter().map(|manga| manga.into()).collect(),
                     listing: Some(Listing {
                         id: "dailymanga".to_string(),

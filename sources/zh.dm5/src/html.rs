@@ -5,7 +5,7 @@ use aidoku::{
     prelude::*,
 };
 
-use crate::{fetch::Fetch, js_packer, settings, url::Url};
+use crate::{fetch::Fetch, helpers, settings, url::Url};
 
 pub trait GenManga {
     fn list(&self) -> Result<MangaPageResult>;
@@ -179,19 +179,17 @@ impl GenManga for Document {
 
     fn chapter(url: String, body: String) -> Result<Vec<Page>> {
         // Extract DM5 variables from the chapter page
-        let cid =
-            js_packer::extract_dm5_var(&body, "DM5_CID").ok_or_else(|| error!("No DM5_CID"))?;
-        let image_count: usize = js_packer::extract_dm5_var(&body, "DM5_IMAGE_COUNT")
+        let cid = helpers::extract_dm5_var(&body, "DM5_CID").ok_or_else(|| error!("No DM5_CID"))?;
+        let image_count: usize = helpers::extract_dm5_var(&body, "DM5_IMAGE_COUNT")
             .ok_or_else(|| error!("No DM5_IMAGE_COUNT"))?
             .parse()
             .map_err(|_| error!("Bad IMAGE_COUNT"))?;
-        let mid =
-            js_packer::extract_dm5_var(&body, "DM5_MID").ok_or_else(|| error!("No DM5_MID"))?;
-        let viewsign = js_packer::extract_dm5_var(&body, "DM5_VIEWSIGN")
+        let mid = helpers::extract_dm5_var(&body, "DM5_MID").ok_or_else(|| error!("No DM5_MID"))?;
+        let viewsign = helpers::extract_dm5_var(&body, "DM5_VIEWSIGN")
             .ok_or_else(|| error!("No DM5_VIEWSIGN"))?;
-        let viewsign_dt = js_packer::extract_dm5_var(&body, "DM5_VIEWSIGN_DT")
+        let viewsign_dt = helpers::extract_dm5_var(&body, "DM5_VIEWSIGN_DT")
             .ok_or_else(|| error!("No DM5_VIEWSIGN_DT"))?;
-        let dm5_key = js_packer::extract_dm5_key(&body).unwrap_or("");
+        let dm5_key = helpers::extract_dm5_key(&body).unwrap_or("");
 
         let base_url = settings::get_base_url();
         let mut pages: Vec<Page> = Vec::new();
@@ -205,10 +203,9 @@ impl GenManga for Document {
 
             let packed = Fetch::get(api_url)?.header("Referer", &url).string()?;
 
-            let decoded =
-                js_packer::unpack(&packed).ok_or_else(|| error!("Failed to unpack JS"))?;
+            let decoded = helpers::unpack(&packed).ok_or_else(|| error!("Failed to unpack JS"))?;
 
-            let urls = js_packer::extract_image_urls(&decoded)
+            let urls = helpers::extract_image_urls(&decoded)
                 .ok_or_else(|| error!("Failed to extract image URLs"))?;
 
             if urls.is_empty() {
