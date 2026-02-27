@@ -22,6 +22,13 @@ pub enum Url {
     Book {
         id: String,
     },
+    Serialization {
+        id: String,
+    },
+    Promotes {
+        id: String,
+        page: i32,
+    },
 }
 
 impl Url {
@@ -54,6 +61,12 @@ impl Url {
                         base_url, tag, timing, sort, page
                     )
                 }
+            }
+            Self::Serialization { id } => {
+                format!("{}/serialization/{}", base_url, id)
+            }
+            Self::Promotes { id, page } => {
+                format!("{}/promotes/{}?page={}", base_url, id, page)
             }
         }
     }
@@ -108,5 +121,13 @@ impl Url {
 
     pub fn chapter(id: String) -> Result<Self> {
         Ok(Self::Chapter { id })
+    }
+
+    pub fn serialization(id: String) -> Result<Self> {
+        Ok(Self::Serialization { id })
+    }
+
+    pub fn promotes(id: String, page: i32) -> Result<Self> {
+        Ok(Self::Promotes { id, page })
     }
 }

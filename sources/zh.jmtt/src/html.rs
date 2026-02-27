@@ -20,10 +20,25 @@ impl GenManga for Document {
         let mut mangas: Vec<Manga> = Vec::new();
 
         let items = self
-            .select("div.list-col > div.p-b-15")
+            .select("div.p-b-15")
             .ok_or_else(|| error!("No manga items found"))?;
 
         for item in items {
+            let img_node = item
+                .select_first("img.lazy_img, a > img")
+                .ok_or_else(|| error!("No img found"))?;
+
+            let cover = img_node
+                .attr("data-original")
+                .or_else(|| img_node.attr("src"))
+                .ok_or_else(|| error!("No cover attribute found"))?
+                .trim()
+                .to_string();
+
+            if cover.contains("blank.jpg") {
+                continue;
+            }
+
             let id = item
                 .select_first("a")
                 .ok_or_else(|| error!("No link found"))?
@@ -36,19 +51,8 @@ impl GenManga for Document {
 
             let url = Url::book(id.clone())?.to_string();
 
-            let img_node = item
-                .select_first("img.lazy_img")
-                .ok_or_else(|| error!("No cover found"))?;
-
-            let cover = img_node
-                .attr("data-original")
-                .or_else(|| img_node.attr("src"))
-                .ok_or_else(|| error!("No cover attribute found"))?
-                .trim()
-                .to_string();
-
             let title = item
-                .select_first(".title-truncate")
+                .select_first(".title-truncate, span.video-title")
                 .ok_or_else(|| error!("No title found"))?
                 .text()
                 .ok_or_else(|| error!("No title found"))?
@@ -66,7 +70,7 @@ impl GenManga for Document {
 
         Ok(MangaPageResult {
             entries: mangas.clone(),
-            has_next_page: !mangas.is_empty(),
+            has_next_page: !mangas.is_empty() && self.select_first(".pagination").is_some(),
         })
     }
 

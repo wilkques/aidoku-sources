@@ -1,6 +1,9 @@
 use aidoku::{
     canvas::Rect,
-    imports::canvas::{Canvas, ImageRef},
+    imports::{
+        canvas::{Canvas, ImageRef},
+        std::current_date,
+    },
     prelude::*,
 };
 
@@ -74,4 +77,12 @@ pub fn reload_image(image: &ImageRef, pieces: u32) -> ImageRef {
     }
 
     canvas.get_image()
+}
+
+pub fn get_current_day_of_week() -> i64 {
+    let current_timestamp = current_date() as i64;
+    let local_timestamp = current_timestamp + 8 * 3600; // UTC+8
+    let days_since_epoch = local_timestamp / 86400;
+    let day_of_week = (days_since_epoch + 3) % 7 + 1; // 1 = Monday, 7 = Sunday
+    day_of_week
 }

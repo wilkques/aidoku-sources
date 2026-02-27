@@ -2,7 +2,7 @@
   "info": {
     "id": "zh.jmtt",
     "name": "禁漫天堂",
-    "version": 1,
+    "version": 2,
     "urls": [
       "https://18comic.vip",
       "https://18comic.ink",
@@ -17,6 +17,40 @@
       "zh"
     ]
   },
+  "listings": [
+    {
+      "id": "dailymanga",
+      "name": "今日更新"
+    },
+    {
+      "id": "newmanga",
+      "name": "最新漫畫"
+    },
+    {
+      "id": "jingmanchinesemanga",
+      "name": "禁漫漢化組"
+    },
+    {
+      "id": "hanmanga",
+      "name": "最新韓漫"
+    },
+    {
+      "id": "recommendmanga",
+      "name": "推薦本本"
+    },
+    {
+      "id": "jingmanga",
+      "name": "禁漫去碼&全彩化"
+    },
+    {
+      "id": "offprintmanga",
+      "name": "單行本"
+    },
+    {
+      "id": "finishmanga",
+      "name": "已完結"
+    }
+  ],
   "config": {
     "allowsBaseUrlSelect": true,
     "hidesFiltersWhileSearching": true,

@@ -3,24 +3,20 @@ extern crate alloc;
 
 mod fetch;
 mod helpers;
+mod home;
 mod html;
 mod settings;
 mod url;
 
 use aidoku::{
-    BaseUrlProvider, Chapter, DeepLinkHandler, DeepLinkResult, FilterValue, ImageRequestProvider,
-    ImageResponse, Manga, MangaPageResult, Page, PageContext, PageImageProcessor, Result, Source,
-    alloc::{String, Vec, string::ToString as _},
+    BaseUrlProvider, Chapter, FilterValue, ImageRequestProvider, ImageResponse, Listing,
+    ListingProvider, Manga, MangaPageResult, Page, PageContext, PageImageProcessor, Result, Source,
+    alloc::{String, Vec, string::ToString as _, vec},
     imports::{canvas::ImageRef, net::Request},
     prelude::*,
 };
 
-use crate::{
-    fetch::{Client, Fetch},
-    helpers::reload_image,
-    html::GenManga,
-    url::Url,
-};
+use crate::{fetch::Fetch, helpers::reload_image, html::GenManga, url::Url};
 
 struct Jmtt;
 
@@ -37,7 +33,7 @@ impl Source for Jmtt {
     ) -> Result<MangaPageResult> {
         let url = Url::filters(query.as_deref(), page, &filters)?.to_string();
 
-        let response = Fetch::get(url)?.get_html()?;
+        let response = Fetch::get(url)?.html()?;
 
         GenManga::list(&response)
     }
@@ -50,7 +46,7 @@ impl Source for Jmtt {
     ) -> Result<Manga> {
         let url = Url::book(manga.key.clone())?.to_string();
 
-        let response = Fetch::get(url)?.get_html()?;
+        let response = Fetch::get(url)?.html()?;
 
         if needs_details {
             GenManga::detail(&response, &mut manga)?;
@@ -65,30 +61,9 @@ impl Source for Jmtt {
 
     fn get_page_list(&self, _: Manga, chapter: Chapter) -> Result<Vec<Page>> {
         let url = Url::chapter(chapter.key.clone())?.to_string();
-        let response = Fetch::get(url)?.get_html()?;
+        let response = Fetch::get(url)?.html()?;
 
         GenManga::chapter(&response, &chapter)
-    }
-}
-
-impl DeepLinkHandler for Jmtt {
-    fn handle_deep_link(&self, url: String) -> Result<Option<DeepLinkResult>> {
-        if url.contains("/album/") {
-            let key = url
-                .split("/")
-                .skip(4)
-                .next()
-                .unwrap_or_default()
-                .to_string();
-
-            if key.is_empty() {
-                return Ok(None);
-            }
-
-            return Ok(Some(DeepLinkResult::Manga { key }));
-        }
-
-        Ok(None)
     }
 }
 
@@ -114,16 +89,71 @@ impl PageImageProcessor for Jmtt {
 
 impl ImageRequestProvider for Jmtt {
     fn get_image_request(&self, url: String, _context: Option<PageContext>) -> Result<Request> {
-        Ok(Client::get(url)?)
+        Ok(Fetch::get(url)?)
+    }
+}
+
+impl ListingProvider for Jmtt {
+    fn get_manga_list(&self, listing: Listing, page: i32) -> Result<MangaPageResult> {
+        let url = match listing.id.as_str() {
+            "dailymanga" => {
+                Url::serialization(helpers::get_current_day_of_week().to_string())?.to_string()
+            }
+            "newmanga" => Url::filters(
+                None,
+                page,
+                &vec![FilterValue::Select {
+                    id: "排序".to_string(),
+                    value: "mr".to_string(),
+                }],
+            )?
+            .to_string(),
+            "jingmanchinesemanga" => Url::filters(
+                Some("禁漫汉化组"),
+                page,
+                &vec![FilterValue::Select {
+                    id: "搜索範圍".to_string(),
+                    value: "0".to_string(),
+                }],
+            )?
+            .to_string(),
+            "hanmanga" => Url::filters(
+                None,
+                page,
+                &vec![FilterValue::Select {
+                    id: "類型".to_string(),
+                    value: "hanman".to_string(),
+                }],
+            )?
+            .to_string(),
+            "recommendmanga" => Url::promotes("29".to_string(), page)?.to_string(),
+            "jingmanga" => Url::promotes("30".to_string(), page)?.to_string(),
+            "offprintmanga" => Url::filters(
+                None,
+                page,
+                &vec![FilterValue::Select {
+                    id: "類型".to_string(),
+                    value: "single".to_string(),
+                }],
+            )?
+            .to_string(),
+            "finishmanga" => Url::serialization("0".to_string())?.to_string(),
+            _ => bail!("Invalid listing"),
+        };
+
+        let response = Fetch::get(url)?.html()?;
+
+        GenManga::list(&response)
     }
 }
 
 register_source!(
     Jmtt,
-    DeepLinkHandler,
     BaseUrlProvider,
     PageImageProcessor,
-    ImageRequestProvider
+    ImageRequestProvider,
+    Home,
+    ListingProvider
 );
 
 #[cfg(test)]
