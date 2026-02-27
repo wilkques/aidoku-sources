@@ -23,9 +23,10 @@ docker exec -it aidoku-sources /bin/sh
 ```
 cd /<document_root>/aidoku-sources/sources/<source name>
 
-aidoku package
+# If the content remains unchanged after editing.
+rm ../../target/release
 
-aidoku build package.aix --name "Wilkques Sources"
+aidoku package
 
 aidoku serve package.aix
 ```
@@ -40,6 +41,9 @@ You can use `aidoku::println!("URL={} Query={:?} Filter={:?}", &url, &query, &fi
 ```
 cd /<document_root>/aidoku-sources/sources/<source name>
 
+# If the content remains unchanged after editing.
+rm ../../target/release
+
 # run test
 cargo test
 
@@ -53,6 +57,8 @@ cargo test -- --nocapture
 ## Deployment
 ```
 cd /<document_root>/aidoku-sources/sources/<source name>
+
+rm ../../target/release
 
 aidoku package
 

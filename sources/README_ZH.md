@@ -23,9 +23,10 @@ docker exec -it aidoku-sources /bin/sh
 ```
 cd /<document_root>/aidoku-sources/sources/<source name>
 
-aidoku package
+# 如果更改的內容沒有更新
+rm ../../target/release
 
-aidoku build package.aix --name "Wilkques Sources"
+aidoku package
 
 aidoku serve package.aix
 ```
@@ -40,6 +41,9 @@ aidoku serve package.aix
 ```
 cd /<document_root>/aidoku-sources/sources/<source name>
 
+# 如果更改的內容沒有更新
+rm ../../target/release
+
 # run test
 cargo test
 
@@ -53,6 +57,8 @@ cargo test -- --nocapture
 ## Deployment
 ```
 cd /<document_root>/aidoku-sources/sources/<source name>
+
+rm ../../target/release
 
 aidoku package
 
