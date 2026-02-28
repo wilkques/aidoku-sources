@@ -134,7 +134,7 @@ impl GenManga for Document {
         let mut chapters: Vec<Chapter> = Vec::new();
 
         let items: Vec<_> = self
-            .select("div.episode > ul > a")
+            .select("div#episode-block div.episode > ul > a")
             .map(|el| el.collect::<Vec<_>>())
             .unwrap_or_default();
 

@@ -1,8 +1,8 @@
-// #![expect(clippy::unwrap_used)]
+#![expect(clippy::unwrap_used)]
 
-// use super::*;
+use super::*;
 // use aidoku::ListingKind;
-// use aidoku_test::aidoku_test;
+use aidoku_test::aidoku_test;
 
 // #[aidoku_test]
 // fn test_get_search_manga_list() {
@@ -42,35 +42,35 @@
 //     panic!("完整結果: {:#?}", result);
 // }
 
-// #[aidoku_test]
-// fn test_get_manga_update() {
-//     let source = Jmtt::new();
+#[aidoku_test]
+fn test_get_manga_update() {
+    let source = Jmtt::new();
 
-//     // 1. 建立一個假的 Manga 用於測試
-//     let manga = Manga {
-//         key: "1283446".to_string(), // 換成真實的漫畫 ID 以測試
-//         title: "[禁漫漢化組](C107)[許さない(藤隆)]副課長が同僚に好きにされちゃう本(ゼンレスゾーンゼロ)[中国翻訳]".to_string(),
-//         cover: Some(
-//             "https://cdn-msp2.18comic.vip/media/albums/1283446.jpg?u=1771654522".to_string(),
-//         ),
-//         url: Some("https://18comic.vip/album/1283446".to_string()),
-//         ..Default::default()
-//     };
-//     // let manga = Manga {
-//     //     key: "1111972".to_string(), // 換成真實的漫畫 ID 以測試
-//     //     title: "与初恋的意外同居 / 與初戀的意外同居".to_string(),
-//     //     cover: Some(
-//     //         "https://cdn-msp3.18comic.vip/media/albums/1111972_3x4.jpg?u=1771167758".to_string(),
-//     //     ),
-//     //     url: Some("https://18comic.vip/album/1111972".to_string()),
-//     //     ..Default::default()
-//     // };
+    // 1. 建立一個假的 Manga 用於測試
+    let manga = Manga {
+        key: "553653".to_string(), // 換成真實的漫畫 ID 以測試
+        title: "強制催眠-发小碰不得".to_string(),
+        cover: Some(
+            "https://cdn-msp3.18comic.vip/media/albums/553653_3x4.jpg?u=1772251658".to_string(),
+        ),
+        url: Some("https://18comic.vip/album/553653".to_string()),
+        ..Default::default()
+    };
+    // let manga = Manga {
+    //     key: "1111972".to_string(), // 換成真實的漫畫 ID 以測試
+    //     title: "与初恋的意外同居 / 與初戀的意外同居".to_string(),
+    //     cover: Some(
+    //         "https://cdn-msp3.18comic.vip/media/albums/1111972_3x4.jpg?u=1771167758".to_string(),
+    //     ),
+    //     url: Some("https://18comic.vip/album/1111972".to_string()),
+    //     ..Default::default()
+    // };
 
-//     // 2. 傳入正確的三個參數
-//     let result = source.get_manga_update(manga, true, true).unwrap();
+    // 2. 傳入正確的三個參數
+    let result = source.get_manga_update(manga, true, true).unwrap();
 
-//     panic!("完整結果: {:#?}", result);
-// }
+    panic!("完整結果: {:#?}", result);
+}
 
 // #[aidoku_test]
 // fn test_get_page_list() {

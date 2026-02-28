@@ -1,7 +1,7 @@
 use aidoku::{
     FilterValue, Home, HomeComponent, HomeComponentValue, HomeLayout, HomePartialResult, Listing,
     ListingKind, Manga, Result,
-    alloc::{String, Vec, string::ToString as _, vec},
+    alloc::{Vec, string::ToString as _, vec},
     error,
     imports::{
         net::{Request, RequestError, Response},
