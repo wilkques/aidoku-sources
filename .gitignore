@@ -5,3 +5,4 @@ Payload
 sources/*/package.aix
 sources/*/target
 sources/*/public
+sources/*/*.log

@@ -1,8 +1,4 @@
-use aidoku::{
-    FilterValue, Result,
-    alloc::{String, string::ToString as _},
-    prelude::*,
-};
+use aidoku::{FilterValue, Result, alloc::String, prelude::*};
 
 use crate::settings;
 
@@ -72,6 +68,7 @@ impl Url {
     }
 
     pub fn filters(query: Option<&str>, page: i32, filters: &[FilterValue]) -> Result<Self> {
+        let mut query = query.unwrap_or_default();
         let mut tag = String::from("");
         let mut sort = String::from("mr");
         let mut timing = String::from("a");
@@ -81,17 +78,47 @@ impl Url {
 
         for filter in filters {
             match filter {
-                FilterValue::Select { id, value } => match id.as_str() {
-                    "類型" => tag = value.clone(),
-                    "排序" => sort = value.clone(),
-                    "時間" => timing = value.clone(),
-                    "搜索範圍" => range = value.clone(),
-                    "genre" => genre = Some(value.clone()),
+                FilterValue::Text { id, value } => match id.as_str() {
+                    "作品" => {
+                        query = value;
+                        range = String::from("1");
+                    }
+                    "作者" => author = Some(value.clone()),
+                    "標籤" => {
+                        query = value;
+                        range = String::from("3");
+                    }
+                    "登場人物" => {
+                        query = value;
+                        range = String::from("4");
+                    }
                     "author" => author = Some(value.clone()),
                     _ => continue,
                 },
-                FilterValue::Text { id, value } => match id.as_str() {
-                    "author" => author = Some(value.clone()),
+                FilterValue::Select { id, value } => match id.as_str() {
+                    "類型" => tag = value.clone(),
+                    "genre" => genre = Some(value.clone()),
+                    _ => continue,
+                },
+                FilterValue::Sort { id, index, .. } => match id.as_str() {
+                    "排序" => {
+                        sort = match index {
+                            1 => String::from("mv"),
+                            2 => String::from("mp"),
+                            3 => String::from("tr"),
+                            4 => String::from("md"),
+                            5 => String::from("tl"),
+                            _ => String::from("mr"),
+                        }
+                    }
+                    "時間" => {
+                        timing = match index {
+                            1 => String::from("t"),
+                            2 => String::from("w"),
+                            3 => String::from("m"),
+                            _ => String::from("a"),
+                        }
+                    }
                     _ => continue,
                 },
                 _ => continue,
@@ -99,7 +126,7 @@ impl Url {
         }
 
         let (final_query, range) = match (query, genre, author) {
-            (Some(q), _, _) => (q.to_string(), range),
+            (q, _, _) if !q.is_empty() => (String::from(q), range),
             (_, Some(g), _) => (g, String::from("3")),
             (_, _, Some(a)) => (a, String::from("2")),
             _ => (String::new(), range),

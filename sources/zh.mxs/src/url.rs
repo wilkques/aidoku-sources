@@ -82,22 +82,24 @@ impl Url {
                         page,
                     });
                 }
+                FilterValue::Sort { id, index, .. } => match id.as_str() {
+                    "列表" => {
+                        let sort = match index {
+                            1 => String::from("update"),
+                            _ => String::from("booklist"),
+                        };
+
+                        return Ok(Self::ListType {
+                            list_type: sort,
+                            page,
+                        });
+                    }
+                    _ => continue,
+                },
                 FilterValue::Select { id, value } => match id.as_str() {
                     "题材" => tag = value.clone(),
                     "地区" => area = value.clone(),
                     "进度" => end = value.clone(),
-                    "列表" => {
-                        return Ok(Self::ListType {
-                            list_type: value.clone(),
-                            page,
-                        });
-                    }
-                    "author" => {
-                        return Ok(Self::Search {
-                            query: encode_uri(value.clone()),
-                            page,
-                        });
-                    }
                     "genre" => tag = value.clone(),
                     _ => continue,
                 },

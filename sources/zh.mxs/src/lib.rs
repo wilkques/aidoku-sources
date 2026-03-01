@@ -18,9 +18,9 @@ use crate::fetch::Fetch;
 use crate::html::GenManga;
 use crate::url::Url;
 
-struct Mxshm;
+struct Mxs;
 
-impl Source for Mxshm {
+impl Source for Mxs {
     fn new() -> Self {
         Self
     }
@@ -68,7 +68,7 @@ impl Source for Mxshm {
     }
 }
 
-impl DeepLinkHandler for Mxshm {
+impl DeepLinkHandler for Mxs {
     fn handle_deep_link(&self, url: String) -> Result<Option<DeepLinkResult>> {
         if url.contains("/book/") {
             let key = url.split("/book/").last().unwrap_or_default().to_string();
@@ -84,13 +84,13 @@ impl DeepLinkHandler for Mxshm {
     }
 }
 
-impl BaseUrlProvider for Mxshm {
+impl BaseUrlProvider for Mxs {
     fn get_base_url(&self) -> Result<String> {
         Ok(settings::get_base_url())
     }
 }
 
-impl ListingProvider for Mxshm {
+impl ListingProvider for Mxs {
     fn get_manga_list(&self, listing: Listing, page: i32) -> Result<MangaPageResult> {
         let filters = match listing.id.as_str() {
             "dailymanga" => vec![FilterValue::Select {
@@ -117,13 +117,7 @@ impl ListingProvider for Mxshm {
     }
 }
 
-register_source!(
-    Mxshm,
-    DeepLinkHandler,
-    BaseUrlProvider,
-    Home,
-    ListingProvider
-);
+register_source!(Mxs, DeepLinkHandler, BaseUrlProvider, Home, ListingProvider);
 
 #[cfg(test)]
 mod test;

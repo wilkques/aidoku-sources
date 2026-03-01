@@ -1,17 +1,13 @@
 use aidoku::{
     Home, HomeComponent, HomeComponentValue, HomeLayout, HomePartialResult, Listing, ListingKind,
-    Manga, Result,
-    alloc::{String, Vec, string::ToString as _, vec},
-    error,
-    imports::{
-        net::{Request, RequestError, Response},
-        std::send_partial_result,
-    },
+    Result,
+    alloc::{Vec, string::ToString as _, vec},
+    imports::std::send_partial_result,
 };
 
-use crate::{Mxshm, fetch::Fetch, html::GenManga, url::Url};
+use crate::{Mxs, fetch::Fetch, html::GenManga, url::Url};
 
-impl Home for Mxshm {
+impl Home for Mxs {
     fn get_home(&self) -> Result<HomeLayout> {
         send_partial_result(&HomePartialResult::Layout(HomeLayout {
             components: vec![

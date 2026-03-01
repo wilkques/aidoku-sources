@@ -1,5 +1,29 @@
 [
   {
+    "type": "text",
+    "id": "作品",
+    "title": "搜索作品",
+    "placeholder": "輸入:作品名稱"
+  },
+  {
+    "type": "text",
+    "id": "作者",
+    "title": "搜索作者",
+    "placeholder": "輸入:作者名稱"
+  },
+  {
+    "type": "text",
+    "id": "標籤",
+    "title": "搜索標籤",
+    "placeholder": "輸入:標籤"
+  },
+  {
+    "type": "text",
+    "id": "登場人物",
+    "title": "搜索登場人物",
+    "placeholder": "輸入:登場人物"
+  },
+  {
     "type": "select",
     "title": "類型",
     "options": [
@@ -22,7 +46,7 @@
     ]
   },
   {
-    "type": "select",
+    "type": "sort",
     "title": "排序",
     "options": [
       "最新",
@@ -31,48 +55,16 @@
       "最多評分",
       "最多評論",
       "最多愛心"
-    ],
-    "ids": [
-      "mr",
-      "mv",
-      "mp",
-      "tr",
-      "md",
-      "tl"
     ]
   },
   {
-    "type": "select",
+    "type": "sort",
     "title": "時間",
     "options": [
       "全部",
       "今天",
       "本周",
       "本月"
-    ],
-    "ids": [
-      "a",
-      "t",
-      "w",
-      "m"
-    ]
-  },
-  {
-    "type": "select",
-    "title": "搜索範圍",
-    "options": [
-      "站內",
-      "作品",
-      "作者",
-      "標籤",
-      "登場人物"
-    ],
-    "ids": [
-      "0",
-      "1",
-      "2",
-      "3",
-      "4"
     ]
   }
 ]

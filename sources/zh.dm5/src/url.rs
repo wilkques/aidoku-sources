@@ -188,6 +188,13 @@ impl Url {
                         page,
                     });
                 }
+                FilterValue::Sort { index, .. } => {
+                    sort = match index {
+                        0 => "-s2".to_string(),
+                        2 => "-s18".to_string(),
+                        _ => "".to_string(),
+                    };
+                }
                 FilterValue::Select { id, value } => match id.as_str() {
                     "排序" => {
                         sort = if value.is_empty() {
@@ -196,20 +203,8 @@ impl Url {
                             format!("-{}", value.clone())
                         }
                     }
-                    "題材" => {
-                        tag = {
-                            aidoku::println!("match tag: {}", value.clone());
-                            value.clone()
-                        }
-                    }
+                    "題材" => tag = value.clone(),
                     "地區" => area = value.clone(),
-                    "進度" => {
-                        status = if value.is_empty() {
-                            String::new()
-                        } else {
-                            format!("-{}", value.clone())
-                        }
-                    }
                     "受眾" => audience = value.clone(),
                     "收費" => {
                         pay = if value.is_empty() {

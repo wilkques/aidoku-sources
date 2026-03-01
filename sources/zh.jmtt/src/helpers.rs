@@ -59,7 +59,7 @@ pub fn reload_image(image: &ImageRef, pieces: u32) -> ImageRef {
     let remainder = height % (pieces as f32);
 
     for i in 0..pieces {
-        let mut slice_height = (height / (pieces as f32)).floor();
+        let mut slice_height = FloatCore::floor(height / (pieces as f32));
         let mut dst_y = slice_height * (i as f32);
         let src_y = height - slice_height * ((i + 1) as f32) - remainder;
 
