@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "sources/zh.mxshm",
+    "sources/zh.baka",
+    "sources/zh.mxs",
     "sources/zh.jmtt",
     "sources/zh.dm5"
 ]

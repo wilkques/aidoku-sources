@@ -1,0 +1,40 @@
+{
+  "info": {
+    "id": "zh.baka",
+    "name": "巴卡漫畫",
+    "version": 1,
+    "urls": [
+      "https://bakamh.com",
+      "https://bakamh.ru",
+      "https://baka3.me"
+    ],
+    "contentRating": 1,
+    "languages": [
+      "zh"
+    ]
+  },
+  "listings": [
+    {
+      "id": "dailymanga",
+      "name": "今日更新"
+    },
+    {
+      "id": "rankmanga",
+      "name": "評分最高"
+    },
+    {
+      "id": "viewmanga",
+      "name": "最多瀏覽"
+    },
+    {
+      "id": "newmanga",
+      "name": "最新發布"
+    }
+  ],
+  "config": {
+    "allowsBaseUrlSelect": true,
+    "hidesFiltersWhileSearching": true,
+    "supportsAuthorSearch": true,
+    "supportsTagSearch": true
+  }
+}

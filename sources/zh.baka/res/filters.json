@@ -1,0 +1,100 @@
+[
+  {
+    "type": "text",
+    "id": "作者",
+    "title": "作者",
+    "placeholder": "輸入:作者名稱"
+  },
+  {
+    "type": "text",
+    "id": "畫家",
+    "title": "畫家",
+    "placeholder": "輸入:畫家名稱"
+  },
+  {
+    "type": "text",
+    "id": "發布年分",
+    "title": "發布年分",
+    "placeholder": "輸入:發布年分"
+  },
+  {
+    "type": "multi-select",
+    "title": "類型",
+    "options": [
+      "全部",
+      "BL",
+      "全年齡",
+      "漢化同人誌",
+      "漢化日漫",
+      "英文漫畫",
+      "韓漫"
+    ],
+    "ids": [
+      "",
+      "bl",
+      "全年龄",
+      "汉化同人志",
+      "汉化日漫",
+      "英文漫画",
+      "韩漫"
+    ]
+  },
+  {
+    "type": "select",
+    "title": "條件",
+    "options": [
+      "或",
+      "和"
+    ],
+    "ids": [
+      "",
+      "1"
+    ]
+  },
+  {
+    "type": "select",
+    "title": "內容",
+    "options": [
+      "全部",
+      "非成人",
+      "僅限成人"
+    ],
+    "ids": [
+      "",
+      "0",
+      "1"
+    ]
+  },
+  {
+    "type": "multi-select",
+    "title": "狀態",
+    "options": [
+      "全部",
+      "連載中",
+      "已完結",
+      "停刊",
+      "休刊",
+      "即將推出"
+    ],
+    "ids": [
+      "",
+      "on-going",
+      "end",
+      "canceled",
+      "on-hold",
+      "upcoming"
+    ]
+  },
+  {
+    "type": "sort",
+    "title": "排序",
+    "canAscend": false,
+    "options": [
+      "關聯",
+      "最新更新",
+      "評分",
+      "最多瀏覽",
+      "最新發布"
+    ]
+  }
+]
