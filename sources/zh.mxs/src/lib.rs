@@ -93,9 +93,10 @@ impl BaseUrlProvider for Mxs {
 impl ListingProvider for Mxs {
     fn get_manga_list(&self, listing: Listing, page: i32) -> Result<MangaPageResult> {
         let filters = match listing.id.as_str() {
-            "dailymanga" => vec![FilterValue::Select {
+            "dailymanga" => vec![FilterValue::Sort {
                 id: "列表".to_string(),
-                value: "update".to_string(),
+                index: 1,
+                ascending: false,
             }],
             "allmanga" => vec![],
             "serialised" => vec![FilterValue::Select {
