@@ -2,6 +2,7 @@
 extern crate alloc;
 
 mod fetch;
+mod home;
 mod html;
 mod settings;
 mod url;
@@ -107,4 +108,4 @@ impl ListingProvider for Bakamh {
     }
 }
 
-register_source!(Bakamh, BaseUrlProvider, ListingProvider);
+register_source!(Bakamh, BaseUrlProvider, ListingProvider, Home);
