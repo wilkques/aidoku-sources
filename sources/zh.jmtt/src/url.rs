@@ -96,13 +96,30 @@ impl Url {
                     _ => continue,
                 },
                 FilterValue::Select { id, value } => match id.as_str() {
-                    "類型" => tag = value.clone(),
+                    "類型" => {
+                        tag = value.clone();
+
+                        if tag == "chinese" {
+                            tag = String::from("doujin/sub/chinese");
+                        }
+                        if tag == "japanese" {
+                            tag = String::from("doujin/sub/japanese");
+                        }
+                        if tag == "cg" {
+                            tag = String::from("doujin/sub/CG");
+                        }
+                        if tag == "cosplay" {
+                            tag = String::from("another/sub/cosplay");
+                        }
+                    }
+                    "主題" => query = value,
                     "genre" => genre = Some(value.clone()),
                     _ => continue,
                 },
                 FilterValue::Sort { id, index, .. } => match id.as_str() {
                     "排序" => {
                         sort = match index {
+                            0 => String::from("mr"),
                             1 => String::from("mv"),
                             2 => String::from("mp"),
                             3 => String::from("tr"),
@@ -113,6 +130,7 @@ impl Url {
                     }
                     "時間" => {
                         timing = match index {
+                            0 => String::from("a"),
                             1 => String::from("t"),
                             2 => String::from("w"),
                             3 => String::from("m"),

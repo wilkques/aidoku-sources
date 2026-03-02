@@ -31,6 +31,26 @@ impl Home for Jmtt {
                     value: HomeComponentValue::empty_manga_list(),
                 },
                 HomeComponent {
+                    title: Some("本日排行".to_string()),
+                    subtitle: None,
+                    value: HomeComponentValue::empty_manga_list(),
+                },
+                HomeComponent {
+                    title: Some("本週排行".to_string()),
+                    subtitle: None,
+                    value: HomeComponentValue::empty_manga_list(),
+                },
+                HomeComponent {
+                    title: Some("本月排行".to_string()),
+                    subtitle: None,
+                    value: HomeComponentValue::empty_manga_list(),
+                },
+                HomeComponent {
+                    title: Some("總排行".to_string()),
+                    subtitle: None,
+                    value: HomeComponentValue::empty_manga_list(),
+                },
+                HomeComponent {
                     title: Some("禁漫漢化組".to_string()),
                     subtitle: None,
                     value: HomeComponentValue::empty_manga_list(),
@@ -58,7 +78,7 @@ impl Home for Jmtt {
             ],
         }));
 
-        let responses: [core::result::Result<Response, RequestError>; 8] = Request::send_all([
+        let responses: [core::result::Result<Response, RequestError>; 12] = Request::send_all([
             Fetch::get(
                 Url::serialization(helpers::get_current_day_of_week().to_string())?.to_string(),
             )?,
@@ -66,9 +86,79 @@ impl Home for Jmtt {
                 Url::filters(
                     None,
                     1,
-                    &vec![FilterValue::Select {
+                    &vec![
+                        FilterValue::Sort {
+                            id: "排序".to_string(),
+                            index: 1,
+                            ascending: false,
+                        },
+                        FilterValue::Sort {
+                            id: "時間".to_string(),
+                            index: 1,
+                            ascending: false,
+                        },
+                    ],
+                )?
+                .to_string(),
+            )?,
+            Fetch::get(
+                Url::filters(
+                    None,
+                    1,
+                    &vec![
+                        FilterValue::Sort {
+                            id: "排序".to_string(),
+                            index: 1,
+                            ascending: false,
+                        },
+                        FilterValue::Sort {
+                            id: "時間".to_string(),
+                            index: 2,
+                            ascending: false,
+                        },
+                    ],
+                )?
+                .to_string(),
+            )?,
+            Fetch::get(
+                Url::filters(
+                    None,
+                    1,
+                    &vec![
+                        FilterValue::Sort {
+                            id: "排序".to_string(),
+                            index: 1,
+                            ascending: false,
+                        },
+                        FilterValue::Sort {
+                            id: "時間".to_string(),
+                            index: 3,
+                            ascending: false,
+                        },
+                    ],
+                )?
+                .to_string(),
+            )?,
+            Fetch::get(
+                Url::filters(
+                    None,
+                    1,
+                    &vec![FilterValue::Sort {
                         id: "排序".to_string(),
-                        value: "mr".to_string(),
+                        index: 1,
+                        ascending: false,
+                    }],
+                )?
+                .to_string(),
+            )?,
+            Fetch::get(
+                Url::filters(
+                    None,
+                    1,
+                    &vec![FilterValue::Sort {
+                        id: "排序".to_string(),
+                        index: 0,
+                        ascending: false,
                     }],
                 )?
                 .to_string(),
@@ -113,12 +203,16 @@ impl Home for Jmtt {
         .try_into()
         .map_err(|_| error!("Failed to convert requests vec to array"))?;
 
-        let results: [Result<Vec<Manga>>; 8] = responses
+        let results: [Result<Vec<Manga>>; 12] = responses
             .map(|res| res?.get_html()?.list())
             .map(|res| Ok(res?.entries));
 
         let [
             dailymanga,
+            daily_rank,
+            weekly_rank,
+            monthly_rank,
+            total_rank,
             newmanga,
             jingmanchinesemanga,
             hanmanga,
@@ -128,6 +222,10 @@ impl Home for Jmtt {
             finishmanga,
         ] = results;
         let dailymanga = dailymanga?;
+        let daily_rank = daily_rank?;
+        let weekly_rank = weekly_rank?;
+        let monthly_rank = monthly_rank?;
+        let total_rank = total_rank?;
         let newmanga = newmanga?;
         let jingmanchinesemanga = jingmanchinesemanga?;
         let hanmanga = hanmanga?;
@@ -183,6 +281,74 @@ impl Home for Jmtt {
                     listing: Some(Listing {
                         id: "hanmanga".to_string(),
                         name: "最新韓漫".to_string(),
+                        kind: ListingKind::Default,
+                    }),
+                },
+            });
+        }
+
+        if !daily_rank.is_empty() {
+            components.push(HomeComponent {
+                title: Some("今日排行".to_string()),
+                subtitle: None,
+                value: HomeComponentValue::MangaList {
+                    ranking: true,
+                    page_size: Some(3),
+                    entries: daily_rank.into_iter().map(|manga| manga.into()).collect(),
+                    listing: Some(Listing {
+                        id: "daily_rank".to_string(),
+                        name: "今日排行".to_string(),
+                        kind: ListingKind::Default,
+                    }),
+                },
+            });
+        }
+
+        if !weekly_rank.is_empty() {
+            components.push(HomeComponent {
+                title: Some("本週排行".to_string()),
+                subtitle: None,
+                value: HomeComponentValue::MangaList {
+                    ranking: true,
+                    page_size: Some(3),
+                    entries: weekly_rank.into_iter().map(|manga| manga.into()).collect(),
+                    listing: Some(Listing {
+                        id: "weekly_rank".to_string(),
+                        name: "本週排行".to_string(),
+                        kind: ListingKind::Default,
+                    }),
+                },
+            });
+        }
+
+        if !monthly_rank.is_empty() {
+            components.push(HomeComponent {
+                title: Some("本月排行".to_string()),
+                subtitle: None,
+                value: HomeComponentValue::MangaList {
+                    ranking: true,
+                    page_size: Some(3),
+                    entries: monthly_rank.into_iter().map(|manga| manga.into()).collect(),
+                    listing: Some(Listing {
+                        id: "monthly_rank".to_string(),
+                        name: "本月排行".to_string(),
+                        kind: ListingKind::Default,
+                    }),
+                },
+            });
+        }
+
+        if !total_rank.is_empty() {
+            components.push(HomeComponent {
+                title: Some("總排行".to_string()),
+                subtitle: None,
+                value: HomeComponentValue::MangaList {
+                    ranking: true,
+                    page_size: Some(3),
+                    entries: total_rank.into_iter().map(|manga| manga.into()).collect(),
+                    listing: Some(Listing {
+                        id: "total_rank".to_string(),
+                        name: "總排行".to_string(),
                         kind: ListingKind::Default,
                     }),
                 },

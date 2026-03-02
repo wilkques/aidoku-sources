@@ -102,18 +102,10 @@ impl ListingProvider for Jmtt {
             "newmanga" => Url::filters(
                 None,
                 page,
-                &vec![FilterValue::Select {
+                &vec![FilterValue::Sort {
                     id: "排序".to_string(),
-                    value: "mr".to_string(),
-                }],
-            )?
-            .to_string(),
-            "jingmanchinesemanga" => Url::filters(
-                Some("禁漫汉化组"),
-                page,
-                &vec![FilterValue::Select {
-                    id: "搜索範圍".to_string(),
-                    value: "0".to_string(),
+                    index: 0,
+                    ascending: false,
                 }],
             )?
             .to_string(),
@@ -123,6 +115,76 @@ impl ListingProvider for Jmtt {
                 &vec![FilterValue::Select {
                     id: "類型".to_string(),
                     value: "hanman".to_string(),
+                }],
+            )?
+            .to_string(),
+            "daily_rank" => Url::filters(
+                None,
+                page,
+                &vec![
+                    FilterValue::Sort {
+                        id: "排序".to_string(),
+                        index: 1,
+                        ascending: false,
+                    },
+                    FilterValue::Sort {
+                        id: "時間".to_string(),
+                        index: 1,
+                        ascending: false,
+                    },
+                ],
+            )?
+            .to_string(),
+            "weekly_rank" => Url::filters(
+                None,
+                page,
+                &vec![
+                    FilterValue::Sort {
+                        id: "排序".to_string(),
+                        index: 1,
+                        ascending: false,
+                    },
+                    FilterValue::Sort {
+                        id: "時間".to_string(),
+                        index: 2,
+                        ascending: false,
+                    },
+                ],
+            )?
+            .to_string(),
+            "monthly_rank" => Url::filters(
+                None,
+                page,
+                &vec![
+                    FilterValue::Sort {
+                        id: "排序".to_string(),
+                        index: 1,
+                        ascending: false,
+                    },
+                    FilterValue::Sort {
+                        id: "時間".to_string(),
+                        index: 3,
+                        ascending: false,
+                    },
+                ],
+            )?
+            .to_string(),
+            "total_rank" => Url::filters(
+                None,
+                page,
+                &vec![FilterValue::Sort {
+                    id: "排序".to_string(),
+                    index: 1,
+                    ascending: false,
+                }],
+            )?
+            .to_string(),
+            "jingmanchinesemanga" => Url::filters(
+                Some("禁漫汉化组"),
+                page,
+                &vec![FilterValue::Select {
+                    id: "搜索範圍".to_string(),
+                    value: "0".to_string(),
                 }],
             )?
             .to_string(),

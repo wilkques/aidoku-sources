@@ -2,7 +2,7 @@
   "info": {
     "id": "zh.jmtt",
     "name": "禁漫天堂",
-    "version": 4,
+    "version": 5,
     "urls": [
       "https://18comic.vip",
       "https://18comic.ink",
@@ -27,12 +27,28 @@
       "name": "最新漫畫"
     },
     {
-      "id": "jingmanchinesemanga",
-      "name": "禁漫漢化組"
-    },
-    {
       "id": "hanmanga",
       "name": "最新韓漫"
+    },
+    {
+      "id": "daily_rank",
+      "name": "今日排行"
+    },
+    {
+      "id": "weekly_rank",
+      "name": "本週排行"
+    },
+    {
+      "id": "monthly_rank",
+      "name": "本月排行"
+    },
+    {
+      "id": "total_rank",
+      "name": "總排行"
+    },
+    {
+      "id": "jingmanchinesemanga",
+      "name": "禁漫漢化組"
     },
     {
       "id": "recommendmanga",
