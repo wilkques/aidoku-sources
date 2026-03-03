@@ -2,9 +2,8 @@ use aidoku::{
     FilterValue, Home, HomeComponent, HomeComponentValue, HomeLayout, HomePartialResult, Listing,
     ListingKind, Manga, Result,
     alloc::{Vec, string::ToString as _, vec},
-    error,
     imports::{
-        net::{Request, RequestError, Response},
+        net::{RequestError, Response},
         std::send_partial_result,
     },
 };
@@ -38,7 +37,7 @@ impl Home for Bakamh {
             ],
         }));
 
-        let responses: [core::result::Result<Response, RequestError>; 4] = Request::send_all([
+        let responses: [core::result::Result<Response, RequestError>; 4] = [
             Fetch::get(
                 Url::filters(
                     None,
@@ -50,7 +49,8 @@ impl Home for Bakamh {
                     }],
                 )?
                 .to_string(),
-            )?,
+            )?
+            .send(),
             Fetch::get(
                 Url::filters(
                     None,
@@ -62,7 +62,8 @@ impl Home for Bakamh {
                     }],
                 )?
                 .to_string(),
-            )?,
+            )?
+            .send(),
             Fetch::get(
                 Url::filters(
                     None,
@@ -74,7 +75,8 @@ impl Home for Bakamh {
                     }],
                 )?
                 .to_string(),
-            )?,
+            )?
+            .send(),
             Fetch::get(
                 Url::filters(
                     None,
@@ -86,10 +88,9 @@ impl Home for Bakamh {
                     }],
                 )?
                 .to_string(),
-            )?,
-        ])
-        .try_into()
-        .map_err(|_| error!("Failed to convert requests vec to array"))?;
+            )?
+            .send(),
+        ];
 
         let results: [Result<Vec<Manga>>; 4] = responses
             .map(|res| res?.get_html()?.list())
