@@ -78,10 +78,11 @@ impl Home for Jmtt {
             ],
         }));
 
-        let responses: [core::result::Result<Response, RequestError>; 12] = Request::send_all([
+        let responses: [core::result::Result<Response, RequestError>; 12] = [
             Fetch::get(
                 Url::serialization(helpers::get_current_day_of_week().to_string())?.to_string(),
-            )?,
+            )?
+            .send(),
             Fetch::get(
                 Url::filters(
                     None,
@@ -100,7 +101,8 @@ impl Home for Jmtt {
                     ],
                 )?
                 .to_string(),
-            )?,
+            )?
+            .send(),
             Fetch::get(
                 Url::filters(
                     None,
@@ -119,7 +121,8 @@ impl Home for Jmtt {
                     ],
                 )?
                 .to_string(),
-            )?,
+            )?
+            .send(),
             Fetch::get(
                 Url::filters(
                     None,
@@ -138,7 +141,8 @@ impl Home for Jmtt {
                     ],
                 )?
                 .to_string(),
-            )?,
+            )?
+            .send(),
             Fetch::get(
                 Url::filters(
                     None,
@@ -150,7 +154,8 @@ impl Home for Jmtt {
                     }],
                 )?
                 .to_string(),
-            )?,
+            )?
+            .send(),
             Fetch::get(
                 Url::filters(
                     None,
@@ -162,7 +167,8 @@ impl Home for Jmtt {
                     }],
                 )?
                 .to_string(),
-            )?,
+            )?
+            .send(),
             Fetch::get(
                 Url::filters(
                     Some("禁漫汉化组"),
@@ -173,7 +179,8 @@ impl Home for Jmtt {
                     }],
                 )?
                 .to_string(),
-            )?,
+            )?
+            .send(),
             Fetch::get(
                 Url::filters(
                     None,
@@ -184,9 +191,10 @@ impl Home for Jmtt {
                     }],
                 )?
                 .to_string(),
-            )?,
-            Fetch::get(Url::promotes("29".to_string(), 1)?.to_string())?,
-            Fetch::get(Url::promotes("30".to_string(), 1)?.to_string())?,
+            )?
+            .send(),
+            Fetch::get(Url::promotes("29".to_string(), 1)?.to_string())?.send(),
+            Fetch::get(Url::promotes("30".to_string(), 1)?.to_string())?.send(),
             Fetch::get(
                 Url::filters(
                     None,
@@ -197,11 +205,10 @@ impl Home for Jmtt {
                     }],
                 )?
                 .to_string(),
-            )?,
-            Fetch::get(Url::serialization("0".to_string())?.to_string())?,
-        ])
-        .try_into()
-        .map_err(|_| error!("Failed to convert requests vec to array"))?;
+            )?
+            .send(),
+            Fetch::get(Url::serialization("0".to_string())?.to_string())?.send(),
+        ];
 
         let results: [Result<Vec<Manga>>; 12] = responses
             .map(|res| res?.get_html()?.list())
