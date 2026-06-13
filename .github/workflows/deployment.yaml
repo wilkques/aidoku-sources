@@ -39,7 +39,7 @@ jobs:
           path: ~/.cache/sccache
           key: ${{ runner.os }}-sccache-${{ github.sha }}
           restore-keys: ${{ runner.os }}-sccache-
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           override: true
