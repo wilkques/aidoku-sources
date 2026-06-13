@@ -218,7 +218,7 @@ impl GenManga for Document {
             .ok_or_else(|| error!("No chapter img found"))?;
 
         for item in items {
-            let href = item.attr("src").unwrap_or_default();
+            let href = item.attr("data-manga-src").unwrap_or_default();
 
             if href.is_empty() {
                 continue;
