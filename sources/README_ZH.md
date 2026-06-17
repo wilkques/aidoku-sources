@@ -42,7 +42,7 @@ aidoku serve package.aix
 cd /<document_root>/aidoku-sources/sources/<source name>
 
 # 如果更改的內容沒有更新
-rm ../../target/release
+rm -rf ../../target/release
 
 # run test
 cargo test
@@ -58,7 +58,7 @@ cargo test -- --nocapture
 ```
 cd /<document_root>/aidoku-sources/sources/<source name>
 
-rm ../../target/release
+rm -rf ../../target/release
 
 aidoku package
 

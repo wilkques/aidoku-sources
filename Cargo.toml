@@ -3,7 +3,8 @@ members = [
     "sources/zh.baka",
     "sources/zh.mxs",
     "sources/zh.jmtt",
-    "sources/zh.dm5"
+    "sources/zh.dm5",
+    "sources/zh.happy"
 ]
 
 resolver = "2"

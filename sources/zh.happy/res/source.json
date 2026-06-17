@@ -1,0 +1,19 @@
+{
+  "info": {
+    "id": "zh.happy",
+    "name": "嗨皮漫畫",
+    "version": 0,
+    "urls": [
+      "https://m.happymh.com"
+    ],
+    "contentRating": 0,
+    "languages": [
+      "zh"
+    ]
+  },
+  "config": {
+    "allowsBaseUrlSelect": true,
+    "hidesFiltersWhileSearching": true,
+    "supportsTagSearch": true
+  }
+}

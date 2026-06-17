@@ -24,7 +24,7 @@ docker exec -it aidoku-sources /bin/sh
 cd /<document_root>/aidoku-sources/sources/<source name>
 
 # If the content remains unchanged after editing.
-rm ../../target/release
+rm -rf ../../target/release
 
 aidoku package
 
@@ -42,7 +42,7 @@ You can use `aidoku::println!("URL={} Query={:?} Filter={:?}", &url, &query, &fi
 cd /<document_root>/aidoku-sources/sources/<source name>
 
 # If the content remains unchanged after editing.
-rm ../../target/release
+rm -rf ../../target/release
 
 # run test
 cargo test

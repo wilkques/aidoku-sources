@@ -1,6 +1,7 @@
 FROM rust:alpine
 
 RUN apk add --no-cache \ 
+    ca-certificates \
     pkgconfig \
     openssl-dev \
     clang \
