@@ -98,18 +98,20 @@ fn test_get_page_list() {
 
 #[aidoku_test]
 fn test_raw_reading_api() {
-    use crate::{fetch::Fetch, settings, url::Url};
+    use crate::{fetch::Fetch, settings};
 
     let manga_key = "weilaidegudongdian";
     let chapter_key = "6611564";
+    let base = settings::get_base_url();
 
-    let url = Url::chapter(manga_key.to_string(), chapter_key.to_string())
-        .unwrap()
-        .to_string();
+    let url = format!(
+        "{}/v2.0/apis/manga/reading?code={}&cid={}&v=v4.300101",
+        base, manga_key, chapter_key
+    );
 
     let raw: aidoku::alloc::String = Fetch::get(url)
         .unwrap()
-        .header("Referer", &format!("{}/mangaread/{}/{}", settings::get_base_url(), manga_key, chapter_key))
+        .header("Referer", &format!("{}/mangaread/{}/{}", base, manga_key, chapter_key))
         .header("X-Requested-With", "XMLHttpRequest")
         .header("Accept", "application/json")
         .string()

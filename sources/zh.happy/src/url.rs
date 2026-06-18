@@ -1,7 +1,6 @@
 use aidoku::{
     FilterValue, Result,
-    alloc::{String, string::ToString as _},
-    helpers::uri::encode_uri,
+    alloc::String,
     prelude::*,
 };
 
@@ -18,16 +17,11 @@ pub enum Url {
     },
     Search {
         query: String,
-        page: i32,
-    },
-    Chapter {
-        id: String,
-        chapter_id: String
     },
     Book {
         id: String,
         page: i32,
-    }
+    },
 }
 
 impl Url {
@@ -35,9 +29,6 @@ impl Url {
         let base_url = settings::get_base_url();
 
         match self {
-            Self::Chapter { id, chapter_id } => {
-                format!("{}/v2.0/apis/manga/reading?code={}&cid={}&v=v4.300101", base_url, id, chapter_id)
-            }
             Self::Book { id, page } => {
                 format!("{}/v2.0/apis/manga/chapterByPage?code={}&page={}&order=desc", base_url, id, page)
             }
@@ -62,8 +53,7 @@ impl Url {
     pub fn filters(query: Option<&str>, page: i32, filters: &[FilterValue]) -> Result<Self> {
         if let Some(q) = query {
             return Ok(Self::Search {
-                query: encode_uri(q),
-                page,
+                query: String::from(q),
             });
         }
 
@@ -76,8 +66,7 @@ impl Url {
             match filter {
                 FilterValue::Text { value, .. } => {
                     return Ok(Self::Search {
-                        query: encode_uri(value.clone()),
-                        page,
+                        query: value.clone(),
                     });
                 }
                 FilterValue::Select { id, value } => match id.as_str() {
@@ -85,7 +74,6 @@ impl Url {
                     "受眾" => audience = value.clone(),
                     "地區" => area = value.clone(),
                     "狀態" => series_status = value.clone(),
-                    "genre" => genre = value.clone(),
                     _ => continue,
                 },
                 _ => continue,
@@ -101,11 +89,7 @@ impl Url {
         })
     }
 
-    pub fn book(id: String, page: i32) -> Result<Self> {
-        Ok(Self::Book { id, page })
-    }
-
-    pub fn chapter(id: String, chapter_id: String) -> Result<Self> {
-        Ok(Self::Chapter { id, chapter_id })
+    pub fn book(id: String, page: i32) -> Self {
+        Self::Book { id, page }
     }
 }

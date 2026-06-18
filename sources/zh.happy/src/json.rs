@@ -18,7 +18,6 @@ pub struct ReadingApiResponse {
 #[derive(Deserialize, Debug)]
 pub struct ReadingData {
     pub scans: ScansValue,
-    pub max_page: Option<i32>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -112,7 +111,7 @@ impl GenManga {
         let mut page = 1;
 
         loop {
-            let url = Url::book(String::from(key), page)?.to_string();
+            let url = Url::book(String::from(key), page).to_string();
             let data: ChapterApiResponse = Fetch::get(url)?
             .header("Referer", &format!("{}/v2.0/apis/manga/chapterByPage", settings::get_base_url()))
             .json_owned()?;
