@@ -6,7 +6,7 @@
 
 // #[aidoku_test]
 // fn test_get_search_manga_list() {
-//     let source = Mxshm::new();
+//     let source = Mxs::new();
 
 //     let filters = vec![
 //         FilterValue::Select {
@@ -38,7 +38,7 @@
 
 // #[aidoku_test]
 // fn test_get_manga_update() {
-//     let source = Mxshm::new();
+//     let source = Mxs::new();
 
 //     // 1. 建立一個假的 Manga 用於測試
 //     let manga = Manga {
@@ -61,7 +61,7 @@
 
 // #[aidoku_test]
 // fn test_get_page_list() {
-//     let source = Mxshm::new();
+//     let source = Mxs::new();
 
 //     let manga = Manga {
 //         key: "1142".to_string(), // 換成真實的漫畫 ID 以測試
@@ -87,7 +87,7 @@
 
 // #[aidoku_test]
 // fn test_handle_deep_link() {
-//     let source = Mxshm::new();
+//     let source = Mxs::new();
 
 //     // 測試案例 1: 有效的網址
 //     let valid_url = "https://www.mxs13.cc/book/52752".to_string();
@@ -99,7 +99,7 @@
 
 // #[aidoku_test]
 // fn test_get_home() {
-//     let source = Mxshm::new();
+//     let source = Mxs::new();
 
 //     let result = source.get_home();
 
