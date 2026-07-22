@@ -1,7 +1,7 @@
 use aidoku::alloc::{string::String, vec::Vec};
 use serde::Deserialize;
 
-const SECRET: &[u8] = b"DEV_SCAN_SECRET_2026_change_me";
+const SECRET: &[u8] = b"PRO_SCAN_SECRET_20260712_watching_you_DEBUG";
 
 #[derive(Deserialize)]
 pub struct ScanItemDecrypted {

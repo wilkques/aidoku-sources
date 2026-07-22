@@ -8,7 +8,7 @@ use serde::Deserialize;
 use crate::{crypto, fetch::Fetch, settings, url::Url};
 
 // ── 閱讀 API ─────────────────────────────────────────────────
-// GET /v2.0/apis/manga/reading?code={code}&cid={cid}&v=v4.300101
+// GET /v2.0/apis/manga/reading?code={code}&cid={cid}&v=v4.300102
 
 #[derive(Deserialize, Debug)]
 pub struct ReadingApiResponse {
@@ -141,6 +141,7 @@ impl GenManga {
                 match crypto::decrypt_scans(&enc, "happymh.com") {
                     Some(items) => items.into_iter().map(|s| ScanItem { url: s.url }).collect(),
                     None => {
+                        aidoku::println!("[happy] chapter: decrypt failed -> entering fallback");
                         return Self::chapter_fallback(manga_key, chapter_key);
                     }
                 }

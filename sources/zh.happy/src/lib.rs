@@ -13,7 +13,6 @@ use aidoku::{
     prelude::*,
 };
 
-use crate::fetch::Fetch;
 use crate::json::GenManga;
 use crate::url::Url;
 
@@ -39,9 +38,7 @@ impl Source for Happy {
             // document GET to /sssearch triggers the app's interactive CF bypass
             // dialog, user completes captcha, then POST.
             Url::Search { query } => fetch::fetch_search(&base, query)?,
-            _ => Fetch::get(url_obj.to_string())?
-                .header("Referer", &format!("{}/latest", base))
-                .json_owned()?,
+            _ => fetch::fetch_list(&base, url_obj.to_string())?,
         };
 
         GenManga::list(data)
