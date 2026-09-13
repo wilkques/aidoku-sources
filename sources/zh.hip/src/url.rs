@@ -47,6 +47,16 @@ pub enum FilterKind {
     Status(String),
 }
 
+impl FilterKind {
+    /// Genre/Category/Status 是打 hipapi1.s3file.top 拿 JSON，不是 m.hipmh.com 的 HTML 頁
+    pub fn is_json_api(&self) -> bool {
+        matches!(
+            self,
+            FilterKind::Genre(_) | FilterKind::Category(_) | FilterKind::Status(_)
+        )
+    }
+}
+
 #[derive(Clone)]
 pub enum Url {
     Filter { kind: FilterKind, page: i32 },
@@ -68,7 +78,14 @@ impl Url {
                 format!("{}/works/{}", base_url, id)
             }
             Self::Search { query, page } => {
-                format!("{}/search?q={}&page={}&page_size={}", base_url, query, page, page_size)
+                // 搜尋也是打 hipapi1.s3file.top 拿 JSON，不是 m.hipmh.com 的 HTML 頁
+                format!(
+                    "{}/v1/search?q={}&page={}&page_size={}",
+                    settings::get_api_url(),
+                    query,
+                    page,
+                    page_size
+                )
             }
             Self::Filter { kind, page } => {
                 let get_api_url = settings::get_api_url();
@@ -101,11 +118,34 @@ impl Url {
         }
 
         for filter in filters {
+            // 點擊作者（supportsAuthorSearch）傳的是 FilterValue::Text，
+            // id 固定是 "author"（參考 zh.jmtt 的 "作者"/"author" 處理）
+            if let FilterValue::Text { id, value } = filter {
+                if id == "author" {
+                    return Ok(Self::Search {
+                        query: encode_uri(value.clone()),
+                        page,
+                    });
+                }
+
+                continue;
+            }
+
             let FilterValue::Select { id, value } = filter else {
                 continue;
             };
 
-            if id != "题材" {
+            // 點漫畫上的標籤（genre）傳的是 Select，不是 Text（參考 zh.jmtt）。
+            // manga.tags 只有顯示文字、沒有對應的 slug，直接當文字搜尋用——
+            // /v1/search 本身就吃得到類型關鍵字，不用另外做 slug 對照表。
+            if id == "genre" {
+                return Ok(Self::Search {
+                    query: encode_uri(value.clone()),
+                    page,
+                });
+            }
+
+            if id != "題材" {
                 continue;
             }
 

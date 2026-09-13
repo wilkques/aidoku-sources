@@ -4,35 +4,14 @@ use aidoku::{
     imports::{html::Document, std::parse_date},
     prelude::*,
 };
-use serde::Deserialize;
 
 use crate::{
     decoder::{ChapterImagesResponse, decode_chapter_images},
     fetch::Fetch,
+    json::ChaptersApiResponse,
     settings,
     url::Url,
 };
-
-// 章節列表不在 detail 頁的靜態 HTML 裡，是前端另外打 API 拿的
-// GET {api_url}/v1/manga/chapters?mid={mid}&page={page}&per_page={per_page}&order=asc
-#[derive(Deserialize)]
-struct ChaptersApiResponse {
-    data: ChaptersApiData,
-}
-
-#[derive(Deserialize)]
-struct ChaptersApiData {
-    total_pages: i32,
-    items: Vec<ChapterApiItem>,
-}
-
-#[derive(Deserialize)]
-struct ChapterApiItem {
-    hid: String,
-    chapter_number: f32,
-    title: String,
-    updated_at: String,
-}
 
 pub trait GenManga {
     fn list(&self) -> Result<MangaPageResult>;
@@ -106,9 +85,15 @@ impl GenManga for Document {
             .to_string();
 
         manga.authors = self.select("a[href^=\"/author/\"]").map(|list| {
-            list.map(|el| el.text().unwrap_or_default().trim().to_string())
-                .filter(|s| !s.is_empty())
-                .collect::<Vec<String>>()
+            list.flat_map(|el| {
+                el.text()
+                    .unwrap_or_default()
+                    .split(',')
+                    .map(|s| s.trim().to_string())
+                    .collect::<Vec<String>>()
+            })
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<String>>()
         });
 
         manga.artists = Some(Vec::new());
@@ -151,7 +136,7 @@ impl GenManga for Document {
 
         loop {
             let url = format!(
-                "{}/v1/manga/chapters?mid={}&page={}&per_page=50&order=asc",
+                "{}/v1/manga/chapters?mid={}&page={}&per_page=50&order=desc",
                 settings::get_api_url(),
                 mid,
                 page

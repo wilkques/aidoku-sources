@@ -12,6 +12,7 @@ use crate::{
     Hip,
     fetch::Fetch,
     html::GenManga,
+    json,
     url::{FilterKind, Url},
 };
 
@@ -103,11 +104,21 @@ impl Home for Hip {
             .send(),
         ];
 
-        let results: [Result<Vec<Manga>>; 6] = responses
-            .map(|res| res?.get_html()?.list())
-            .map(|res| Ok(res?.entries));
+        // popularity/weekly 是 m.hipmh.com 的 HTML 頁；韓漫/陸漫/日漫/連載中是
+        // hipapi1.s3file.top 回的 JSON，兩種解析方式不一樣，不能套同一個 .map()
+        let [r_popularity, r_weekly, r_korean, r_mainland, r_japanese, r_ongoing] = responses;
 
-        let [popularity, weekly, korean, mainland, japanese, ongoing] = results;
+        let popularity: Result<Vec<Manga>> = (|| Ok(r_popularity?.get_html()?.list()?.entries))();
+        let weekly: Result<Vec<Manga>> = (|| Ok(r_weekly?.get_html()?.list()?.entries))();
+        let korean: Result<Vec<Manga>> =
+            (|| Ok(json::parse_manga_list_json(r_korean?)?.entries))();
+        let mainland: Result<Vec<Manga>> =
+            (|| Ok(json::parse_manga_list_json(r_mainland?)?.entries))();
+        let japanese: Result<Vec<Manga>> =
+            (|| Ok(json::parse_manga_list_json(r_japanese?)?.entries))();
+        let ongoing: Result<Vec<Manga>> =
+            (|| Ok(json::parse_manga_list_json(r_ongoing?)?.entries))();
+
         let popularity = popularity?;
         let weekly = weekly?;
         let korean = korean?;

@@ -18,6 +18,10 @@ pub fn get_reader_url() -> String {
     String::from("https://reader.hipmh.top")
 }
 
+pub fn get_cover_url() -> String {
+    String::from("https://cover.s3imgs.top")
+}
+
 pub fn get_user_agent() -> String {
     let mut user_agent = defaults_get::<String>(USER_AGENT_KEY).unwrap_or_default();
 

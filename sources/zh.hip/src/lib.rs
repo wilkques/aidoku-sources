@@ -5,6 +5,7 @@ mod decoder;
 mod fetch;
 mod home;
 mod html;
+mod json;
 mod settings;
 mod url;
 
@@ -32,9 +33,19 @@ impl Source for Hip {
         page: i32,
         filters: Vec<FilterValue>,
     ) -> Result<MangaPageResult> {
-        let url = Url::filters(query.as_deref(), page, &filters)?.to_string();
+        let built = Url::filters(query.as_deref(), page, &filters)?;
 
-        let response = Fetch::get(url)?.html()?;
+        if let Url::Search { .. } = &built {
+            return json::fetch_search_json(built.to_string());
+        }
+
+        if let Url::Filter { kind, .. } = &built {
+            if kind.is_json_api() {
+                return json::fetch_manga_list_json(built.to_string());
+            }
+        }
+
+        let response = Fetch::get(built.to_string())?.html()?;
 
         GenManga::list(&response)
     }
@@ -81,7 +92,12 @@ impl ListingProvider for Hip {
             _ => bail!("Invalid listing"),
         };
 
+        let use_json = kind.is_json_api();
         let url = Url::Filter { kind, page }.to_string();
+
+        if use_json {
+            return json::fetch_manga_list_json(url);
+        }
 
         let response = Fetch::get(url)?.html()?;
 

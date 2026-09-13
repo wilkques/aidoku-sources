@@ -2,12 +2,38 @@
   "info": {
     "id": "zh.hip",
     "name": "嬉皮",
-    "version": 0,
+    "version": 1,
     "contentRating": 0,
     "languages": [
       "zh"
     ]
   },
+  "listings": [
+    {
+      "id": "popularity",
+      "name": "人氣榜"
+    },
+    {
+      "id": "weekly",
+      "name": "本周熱門"
+    },
+    {
+      "id": "korean",
+      "name": "韓漫"
+    },
+    {
+      "id": "mainland",
+      "name": "陸漫"
+    },
+    {
+      "id": "japanese",
+      "name": "日漫"
+    },
+    {
+      "id": "ongoing",
+      "name": "連載中"
+    }
+  ],
   "config": {
     "allowsBaseUrlSelect": true,
     "hidesFiltersWhileSearching": true,

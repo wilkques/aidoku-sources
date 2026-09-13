@@ -6,7 +6,7 @@
 // // use aidoku::Home;
 // use aidoku::MangaStatus;
 // use aidoku::imports::html::Html;
-// use aidoku_test::aidoku_test;
+use aidoku_test::aidoku_test;
 
 // #[aidoku_test]
 // fn test_list_parsing_offline() {
@@ -193,3 +193,48 @@
 
 //     panic!("✅ 成功解析 DeepLink: {:#?}", result);
 // }
+
+#[aidoku_test]
+fn test_category_list_parsing_offline() {
+    // 離線 fixture（真實 API 回應），驗證 genre/category/status 篩選改走 JSON 解析後邏輯正確
+    // （之前誤用 .html() 解析 hipapi1.s3file.top 回的 JSON，導致選韓漫/陸漫/日漫/連載中卡住）
+    let json = include_str!("../docs/category.json");
+
+    let result = crate::json::parse_manga_list_json_str(json).unwrap();
+
+    assert!(result.has_next_page);
+    assert!(!result.entries.is_empty());
+
+    let first = &result.entries[0];
+    assert_eq!(first.key, "bToxNTIyMQ-wei-zhuang-shang-liu-15214");
+    assert_eq!(first.title, "伪装上流");
+    assert_eq!(
+        first.url.as_deref(),
+        Some("https://m.hipmh.com/works/bToxNTIyMQ-wei-zhuang-shang-liu-15214")
+    );
+    assert_eq!(
+        first.cover.as_deref(),
+        Some(
+            "https://cover.s3imgs.top/kk/vertical/wei-zhuang-shang-liu-15214-d2VpLXpodWFuZy1zaGFuZy1saXUtMTUyMTQ.webp"
+        )
+    );
+}
+
+#[aidoku_test]
+fn test_search_parsing_offline() {
+    // 離線 fixture（真實 API 回應），驗證搜尋改走 hipapi1.s3file.top 的 JSON 解析
+    // （之前打 m.hipmh.com/search 又用 .html() 解析，跟 category 篩選是同一類卡住的 bug）
+    let json = include_str!("../docs/search.json");
+
+    let result = crate::json::parse_search_json_str(json).unwrap();
+
+    assert!(!result.entries.is_empty());
+
+    let first = &result.entries[0];
+    assert_eq!(first.key, "bToyMzQ3NQ-yi-ren-zhi-xia-tencent-531490-17793");
+    assert_eq!(first.title, "一人之下");
+    assert_eq!(
+        first.url.as_deref(),
+        Some("https://m.hipmh.com/works/bToyMzQ3NQ-yi-ren-zhi-xia-tencent-531490-17793")
+    );
+}
