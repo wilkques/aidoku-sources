@@ -1,0 +1,16 @@
+[
+  {
+    "type": "group",
+    "title": "特殊設置",
+    "items": [
+      {
+        "type": "text",
+        "key": "userAgent",
+        "title": "User-Agent",
+        "placeholder": "User-Agent",
+        "default": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+				"refreshes": ["listings", "content"]
+      }
+    ]
+  }
+]

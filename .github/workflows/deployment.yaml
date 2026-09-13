@@ -7,6 +7,12 @@ on:
       - "Cargo.*"
       - "sources/**/**"
       - ".github/workflows/deployment.yaml"
+  workflow_dispatch:
+    inputs:
+      exclude_sources:
+        description: "要跳過編譯的來源資料夾名稱，逗號分隔（例如 zh.happy,zh.baka）"
+        required: false
+        default: "zh.happy"
 
 concurrency:
   group: ${{ github.workflow }}
@@ -55,8 +61,24 @@ jobs:
             cargo install --git https://github.com/Aidoku/aidoku-rs aidoku-cli
           fi
       - name: Build sources
+        env:
+          EXCLUDE_SOURCES: ${{ github.event.inputs.exclude_sources || 'zh.happy' }}
         run: |
+          IFS=',' read -ra EXCLUDES <<< "$EXCLUDE_SOURCES"
           for src in ./sources/*/; do
+            name=$(basename "$src")
+            skip=false
+            for ex in "${EXCLUDES[@]}"; do
+              ex_trimmed=$(echo "$ex" | xargs)
+              if [ -n "$ex_trimmed" ] && [ "$name" == "$ex_trimmed" ]; then
+                skip=true
+                break
+              fi
+            done
+            if [ "$skip" = true ]; then
+              echo "Skipping $name (excluded)"
+              continue
+            fi
             (
               cd "$src"
               rm -rf ../../target/wasm32-unknown-unknown/release/*

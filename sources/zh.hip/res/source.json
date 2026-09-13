@@ -1,0 +1,17 @@
+{
+  "info": {
+    "id": "zh.hip",
+    "name": "嬉皮",
+    "version": 0,
+    "contentRating": 0,
+    "languages": [
+      "zh"
+    ]
+  },
+  "config": {
+    "allowsBaseUrlSelect": true,
+    "hidesFiltersWhileSearching": true,
+    "supportsAuthorSearch": true,
+    "supportsTagSearch": true
+  }
+}
