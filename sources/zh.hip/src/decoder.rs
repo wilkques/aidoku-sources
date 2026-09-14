@@ -100,3 +100,18 @@ pub fn decode_chapter_images(input: &str) -> Option<Vec<String>> {
 
     serde_json::from_str::<Vec<String>>(&json_str).ok()
 }
+
+// 解碼出來的路徑陣列偶爾會在同一個頁碼相鄰出現兩筆（例如
+// "..._46.2gi6me.webp" 緊接著 "..._46.w5v1n8.webp"）。實測其中一筆一律是站方塞的
+// 誘餌：回應 200 但 Content-Type 是 image/png（內容只是幾十 bytes 的 1x1 透明圖，
+// 沒有 Etag/Cache-Control 長期快取），另一筆才是真正的 webp 內頁。**哪一筆是誘餌
+// 沒有固定順序**——同一本書不同章節試過「誘餌在前」跟「誘餌在後」都出現過，不能單靠
+// 陣列順序判斷，只能實際打一次請求看 Content-Type（見 html.rs 的
+// resolve_decoy_duplicates，用 HEAD 請求判斷後再從頁面清單裡踢掉誘餌那筆）。
+// 這裡只提供「取出檔名裡的頁碼」這個共用邏輯給 html.rs 用來分組。
+pub(crate) fn page_number_key(path: &str) -> Option<&str> {
+    let filename = path.rsplit('/').next()?;
+    let stem = filename.split('.').next()?;
+
+    stem.rsplit('_').next()
+}

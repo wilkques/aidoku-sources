@@ -6,3 +6,6 @@ sources/*/package.aix
 sources/*/target
 sources/*/public
 sources/*/*.log
+
+*.jpg
+*.png

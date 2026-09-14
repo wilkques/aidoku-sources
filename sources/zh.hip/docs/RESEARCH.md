@@ -213,6 +213,41 @@ Fixture：[`chapter_images.json`](./chapter_images.json) 是一人之下第 1 �
 
 ---
 
+## 六之一、章節圖片清單裡的誘餌（decoy）頁
+
+**症狀**：aidoku 上某些章節捲動到某個位置會出現一大塊黑色空白（使用者截圖：「一人之下」
+第58話，捲到 47/124 頁時卡在一片黑），但網站自己的閱讀器 `reader.hipmh.top` 看同一話
+是連續無縫的。
+
+**根因**：`decode_chapter_images` 解出來的路徑陣列，偶爾會在**同一個頁碼相鄰出現兩筆**，
+例如：
+
+```
+.../..._46.2gi6me.webp
+.../..._46.w5v1n8.webp
+```
+
+實測其中一筆的回應是 `HTTP 200`、`Content-Type: image/png`，內容只是幾十 bytes 的 1x1
+透明圖（`Cache-Control: no-store`，沒有 `Etag`/`Last-Modified`，明顯是即時生出來的假回應，
+不是真的靜態檔案）；另一筆才是真正的 webp 內頁（有 `Etag`、10 年 `max-age` 的 CDN 快取）。
+這應該是站方防爬蟲塞的誘餌頁。
+
+**踩過的坑**：一開始以為「誘餌一定排在真圖前面」（在「一人之下」兩個不同章節各測一次都
+是誘餌在前、真圖在後），照這個假設寫了「同頁碼時只保留較後面那筆」的無網路版本。結果用
+使用者實際回報的章節（`https://reader.hipmh.top/chapter/bToyODU1MS1jOjEyODQ2MQ-Mjg1NTE6NTguMDA`，
+另一本書）重新驗證，發現**同一組裡誘餌反而排在後面**——順序完全不可靠，不能只憑陣列位置
+判斷，兩種順序都會發生。
+
+**修法**（`html.rs::resolve_decoy_duplicates`）：解碼完先找出「相鄰、頁碼相同」的配對，
+只對這些配對額外打 `HEAD` 請求（用 `Request::send_all` 平行送出），看回應的
+`Content-Type` 是不是 `image/png` 來判斷哪一筆是誘餌並踢掉。這種相鄰重複很少見（實測
+124 頁的章節只出現 1 組），多打的 HEAD 請求數量可忽略；如果 HEAD 請求失敗判斷不出來，
+兩筆都保留，不冒著踢掉真內頁的風險。`decoder.rs` 裡的 `decode_chapter_images` 本身維持
+單純解碼、不做這個過濾（純函式，離線 fixture 測試不受影響），頁碼取出邏輯抽成
+`decoder::page_number_key` 給 `html.rs` 共用。
+
+---
+
 ## 七、還沒驗證 / 已知風險
 
 - **章節圖片解密**：本機 `aidoku-test-runner` 因為 Windows 工具鏈缺 `dlltool.exe` 跑不起來（`cargo install aidoku-test-runner` 會失敗），沒辦法在 wasm 環境裡實際端到端測過；目前的信心來自「用 Node 直接執行混淆碼＋比對 Rust 手刻邏輯的中間值」，邏輯上應該等價，但還沒有手機上實機確認章節圖片能正常顯示（進行中）。

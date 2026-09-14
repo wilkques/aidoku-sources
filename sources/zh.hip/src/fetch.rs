@@ -16,4 +16,8 @@ impl Fetch {
     pub fn get(url: String) -> Result<Request> {
         Fetch::request(url, HttpMethod::Get)
     }
+
+    pub fn head(url: String) -> Result<Request> {
+        Fetch::request(url, HttpMethod::Head)
+    }
 }

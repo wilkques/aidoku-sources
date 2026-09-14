@@ -1,12 +1,12 @@
 use aidoku::{
     Chapter, Manga, MangaPageResult, MangaStatus, Page, PageContent, Result, Viewer,
     alloc::{String, Vec, string::ToString as _},
-    imports::{html::Document, std::parse_date},
+    imports::{html::Document, net::Request, std::parse_date},
     prelude::*,
 };
 
 use crate::{
-    decoder::{ChapterImagesResponse, decode_chapter_images},
+    decoder::{ChapterImagesResponse, decode_chapter_images, page_number_key},
     fetch::Fetch,
     json::ChaptersApiResponse,
     settings,
@@ -199,6 +199,8 @@ impl GenManga for Document {
         let paths = decode_chapter_images(&data.data.images)
             .ok_or_else(|| error!("Failed to decode chapter images"))?;
 
+        let paths = resolve_decoy_duplicates(&img_base, paths);
+
         let pages = paths
             .into_iter()
             .map(|path| Page {
@@ -209,4 +211,70 @@ impl GenManga for Document {
 
         Ok(pages)
     }
+}
+
+// 解碼出來的頁面清單偶爾會在同一個頁碼相鄰出現兩筆，其中一筆是站方塞的誘餌
+// （HTTP 200 但 Content-Type 是 image/png 的 1x1 透明圖），另一筆才是真正的 webp
+// 內頁。不篩掉的話 aidoku 的 webtoon viewer 會把誘餌也當成一頁塞進去，撐出一大塊
+// 黑色空白（見對話截圖：「一人之下」第58話頁碼46 就中招）。
+//
+// 誘餌在陣列裡排在真圖前面還是後面沒有固定規律（同一本書不同章節都各遇過一次），
+// 所以不能只看順序，只能對兩筆都打一次 HEAD 請求，用回應的 Content-Type 判斷。
+// 這種相鄰重複很少見（實測 124 頁的章節只出現 1 組），多打的 HEAD 請求數量可以忽略；
+// 如果請求失敗判斷不出來，兩筆都保留，不要亂踢真的內頁。
+fn resolve_decoy_duplicates(img_base: &str, paths: Vec<String>) -> Vec<String> {
+    let keys: Vec<Option<&str>> = paths.iter().map(|p| page_number_key(p)).collect();
+
+    let mut pairs: Vec<(usize, usize)> = Vec::new();
+    let mut i = 0;
+
+    while i + 1 < paths.len() {
+        if keys[i].is_some() && keys[i] == keys[i + 1] {
+            pairs.push((i, i + 1));
+            i += 2;
+        } else {
+            i += 1;
+        }
+    }
+
+    if pairs.is_empty() {
+        return paths;
+    }
+
+    let requests: Vec<Request> = pairs
+        .iter()
+        .flat_map(|&(a, b)| [a, b])
+        .filter_map(|idx| Fetch::head(format!("{}{}", img_base, paths[idx])).ok())
+        .collect();
+
+    if requests.len() != pairs.len() * 2 {
+        return paths;
+    }
+
+    let responses = Request::send_all(requests);
+
+    let mut drop_indices: Vec<usize> = Vec::new();
+
+    for (pair_idx, &(a, b)) in pairs.iter().enumerate() {
+        let is_png = |idx: usize| {
+            responses
+                .get(idx)
+                .and_then(|r| r.as_ref().ok())
+                .and_then(|r| r.get_header("content-type"))
+                .is_some_and(|ct| ct.starts_with("image/png"))
+        };
+
+        if is_png(pair_idx * 2) {
+            drop_indices.push(a);
+        } else if is_png(pair_idx * 2 + 1) {
+            drop_indices.push(b);
+        }
+    }
+
+    paths
+        .into_iter()
+        .enumerate()
+        .filter(|(i, _)| !drop_indices.contains(i))
+        .map(|(_, path)| path)
+        .collect()
 }
