@@ -139,6 +139,19 @@ webView.evaluateJavaScript(wrappedScript) { _, error in
 - 站方的 `title` 屬性被重複跳脫（HTML 裡是 `&amp;amp;`），解析後還留著 `&amp;`，用 `decode_entities` 再解一層。
 - 首頁四個分類共用同一個 `Web`，依序抓、遇到錯誤就停，被擋時最多只等約 2 秒。
 
+### 2.8 換章節卡住沒提示：錯誤改成文字頁（2026-09-26，已實機驗證）
+
+Aidoku 閱讀器用 `try?` 呼叫 `getPageList`（`ReaderPagedViewModel.getPages`），source 的錯誤訊息被吞掉、
+當成 0 頁：直接開章節只跳 app 的通用「無法載入章節」；捲軸模式捲到章末接下一章（`appendNextChapter`）
+更是 0 頁就直接 `return`，畫面卡住、完全沒提示。
+
+`get_page_list` 失敗時改回傳一頁 `PageContent::Text`（閱讀器以 Markdown 顯示），內容是原本的錯誤訊息
+（例如「Cloudflare 驗證已失效…」）加上「處理完後請關閉閱讀器再重新開啟這一章」。代價：失敗時下載章節
+會「成功」但只存到這一頁；閱讀器會快取這一章，所以驗證後要重開。
+
+source 端沒辦法自動打開設定頁的驗證視窗：SDK 沒有任何顯示 UI 的 API（`WebView` 是背景用），
+唯一會自動跳出的是 app 的 CloudflareHandler 彈窗，但它存 `.default()` store、解完走 URLSession，沒用。
+
 ---
 
 ## 三、不要再嘗試的方向

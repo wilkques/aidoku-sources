@@ -1301,3 +1301,19 @@ hipmh 的內容。要確認的是登入後的書架回應裡，每筆是否帶�
 那樣會讓使用者白解三次、而且保證三次都失敗。
 
 待觀察：clearance 多久會失效（取決於站方的 Challenge Passage 設定），以及自動重試實際救回了多少次。
+
+### 10.7 換章節卡住沒提示：錯誤改成文字頁（2026-09-26，已實機驗證）
+
+使用者回報：捲到最後一頁要換下一章時卡住，沒有任何提示。查 Aidoku app 原始碼：閱讀器用 `try?` 呼叫
+`getPageList`（`Features/Reader/Readers/Paged/ReaderPagedViewModel.swift` 的 `getPages`），source 的錯誤訊息
+被吞掉、當成 0 頁。直接開章節只會跳 app 的通用「無法載入章節」；捲軸模式捲到章末接下一章
+（`ReaderWebtoonViewController.appendNextChapter`）則是 0 頁就直接 `return`，畫面卡住、完全沒提示。
+所以 `Api::json` 那段「請到齒輪 →『Cloudflare 驗證』」的訊息在閱讀器裡從來沒顯示過。
+
+`get_page_list` 失敗時改回傳一頁 `PageContent::Text`（閱讀器以 Markdown 顯示），內容是原本的錯誤訊息
+加上「處理完後請關閉閱讀器再重新開啟這一章」。代價：失敗時下載章節會「成功」但只存到這一頁；閱讀器會快取
+這一章，所以驗證後要重開。
+
+**source 端沒辦法自動打開設定頁的驗證視窗**：aidoku-rs e1320b0 沒有任何顯示 UI 的 host 函式
+（`WebView` 文件明寫 "won't be displayed to the user"），唯一會自動跳出的是 app 的 CloudflareHandler 彈窗，
+理由同 10.6 不能用。要做到只能改 Aidoku app 本身。
