@@ -2,7 +2,7 @@
   "info": {
     "id": "zh.baka",
     "name": "巴卡漫畫",
-    "version": 5,
+    "version": 6,
     "urls": [
       "https://bakamh.com",
       "https://bakamh.ru",
@@ -32,7 +32,6 @@
     }
   ],
   "config": {
-    "allowsBaseUrlSelect": true,
     "hidesFiltersWhileSearching": true,
     "supportsAuthorSearch": true,
     "supportsTagSearch": true

@@ -53,6 +53,10 @@
 - **最後採用 `DynamicSettings`**（`settings.rs::get_cf_settings`）：app 每次打開來源設定頁都會重新呼叫
   `get_settings`，所以按鈕的網址可以用當下的 base URL 填入。按鈕的 key 是 `cfVerify_<host>`，「已驗證」
   狀態每個網域分開記。靜態的 `res/settings.json` 已刪除。
+- **網址選單也改成動態產生**：`allowsBaseUrlSelect` 產生的內建選單只有 `refreshes: ["content"]`
+  （AidokuRunner `Source.swift`），切換網址後設定頁不會收到 `refresh-settings`，驗證 / 登入按鈕
+  還停在舊網址。現在拿掉 `allowsBaseUrlSelect`，在 `get_cf_settings` 自己出 key 同樣是 `url` 的
+  `SelectSetting`，`refreshes` 加上 `"settings"`，切換後設定頁會立刻重新呼叫 `get_settings`。
 
 ### 2.2 設定頁「解碼錯誤」（兩個獨立的原因）
 
