@@ -115,7 +115,22 @@ webView.evaluateJavaScript(wrappedScript) { _, error in
 
 閱讀器是用 `try?` 呼叫處理器的，錯誤不會顯示在畫面上，所以失敗時會印 `[baka] page image failed: ...` 到 log。
 
-### 2.6 其他
+### 2.6 帳號登入（限登入的漫畫）
+
+部分漫畫要登入才能看。網站的登入是首頁上的 JS 彈窗，沒有獨立的登入頁。
+
+- 設定頁「帳號」群組裡的「登入帳號（網域）」按鈕也是 `login` / `web`，打開首頁，使用者用網站自己的登入彈窗
+  登入。web 登入視窗是完整的 WKWebView，所以 JS 可以正常運作。
+- WordPress 的登入 cookie 會存進同一個 per-source store，`Web` 的 XHR 會自動帶上，來源程式完全不需要碰帳號密碼。
+- 按鈕的 key 是 `account_<host>`，登入狀態每個網域分開記（cookie 綁網域）。
+- 限登入的章節在未登入時沒有任何 `image-N`，`chapter()` 會直接報錯，提示去設定頁登入，不會回傳空白章節。
+- 限制：`clear_cookies_on_log_out` 必須是 `false`（見 2.2），所以按鈕的「重設登入狀態」不會真的登出。
+  要登出的話，打開視窗用網站自己的登出功能。
+- 沒有用 basic（帳密）登入：那得自己從 WebView 送出 WordPress 的登入請求、處理 nonce，網站一改版就容易壞。
+
+2026-09-26 實機驗證：登入後，限登入的章節可以正常閱讀。
+
+### 2.7 其他
 
 - 站方的 `title` 屬性被重複跳脫（HTML 裡是 `&amp;amp;`），解析後還留著 `&amp;`，用 `decode_entities` 再解一層。
 - 首頁四個分類共用同一個 `Web`，依序抓、遇到錯誤就停，被擋時最多只等約 2 秒。

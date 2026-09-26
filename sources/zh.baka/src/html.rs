@@ -8,7 +8,7 @@ use aidoku::{
     prelude::*,
 };
 
-use crate::url::Url;
+use crate::{settings, url::Url};
 
 pub trait GenManga {
     fn list(&self) -> Result<MangaPageResult>;
@@ -249,6 +249,14 @@ impl GenManga for Document {
                 content: PageContent::url(url),
                 ..Default::default()
             });
+        }
+
+        // 限登入的章節，未登入時頁面上不會有任何 `image-N`；與其回傳空白章節，不如講清楚
+        if pages.is_empty() {
+            bail!(
+                "這個章節沒有圖片，可能需要登入才能看。請到 瀏覽 → 巴卡漫畫 → 齒輪 →「登入帳號（{}）」登入後再試",
+                settings::cf_host(&settings::get_base_url())
+            );
         }
 
         Ok(pages)

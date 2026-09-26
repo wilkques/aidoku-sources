@@ -54,7 +54,31 @@ pub fn get_cf_settings() -> Vec<Setting> {
         ..Default::default()
     };
 
-    vec![group.into()]
+    // 帳號登入也是同一套機制：網站的登入是首頁上的 JS 彈窗，web 登入視窗是完整的 WKWebView，
+    // 在裡面登入後 WordPress 的登入 cookie 會落在同一個 per-source store，`Web` 的 XHR 自動帶上。
+    let account = LoginSetting {
+        // 登入狀態也是分網域的（cookie 綁網域）
+        key: format!("account_{}", host.replace('.', "_")).into(),
+        title: format!("登入帳號（{}）", host).into(),
+        method: LoginMethod::Web,
+        url: Some(format!("{}/", base_url).into()),
+        logout_title: Some(format!("重設登入狀態（{}）", host).into()),
+        // 同上，必須是 false
+        clear_cookies_on_log_out: false,
+        ..Default::default()
+    };
+
+    let account_group = GroupSetting {
+        key: "accountGroup".into(),
+        title: "帳號".into(),
+        footer: Some(
+            "部分漫畫要登入才能看。點上面的按鈕會打開網站首頁，用網站右上角的登入功能登入後關閉視窗即可。按鈕的「重設登入狀態」不會真的登出，要登出請在視窗裡用網站的登出功能。換網址後要重新登入。".into(),
+        ),
+        items: vec![account.into()],
+        ..Default::default()
+    };
+
+    vec![group.into(), account_group.into()]
 }
 
 /// "https://bakamh.ru" -> "bakamh.ru"
