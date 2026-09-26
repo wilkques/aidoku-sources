@@ -1,6 +1,22 @@
 [
   {
     "type": "group",
+    "title": "Cloudflare",
+    "footer": "章節、搜尋、篩選的 API 受 Cloudflare 保護。出現「Cloudflare 驗證已失效」時，點這裡在開啟的頁面完成驗證（看到 JSON 文字就代表成功），關閉視窗後再重試。",
+    "items": [
+      {
+        "type": "login",
+        "key": "cfVerify",
+        "title": "Cloudflare 驗證",
+        "logoutTitle": "清除 Cloudflare 驗證",
+        "method": "web",
+        "url": "https://hipapi1.s3file.top/",
+        "clearCookiesOnLogOut": true
+      }
+    ]
+  },
+  {
+    "type": "group",
     "title": "特殊設置",
     "items": [
       {

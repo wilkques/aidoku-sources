@@ -45,7 +45,7 @@ impl Source for Hip {
             }
         }
 
-        let response = Fetch::get(built.to_string())?.html()?;
+        let response = Fetch::html(built.to_string())?;
 
         GenManga::list(&response)
     }
@@ -58,7 +58,7 @@ impl Source for Hip {
     ) -> Result<Manga> {
         let url = Url::book(manga.key.clone())?.to_string();
 
-        let response = Fetch::get(url)?.html()?;
+        let response = Fetch::html(url)?;
 
         if needs_details {
             GenManga::detail(&response, &mut manga)?;
@@ -74,7 +74,7 @@ impl Source for Hip {
     fn get_page_list(&self, _: Manga, chapter: Chapter) -> Result<Vec<Page>> {
         let url = Url::chapter(chapter.key.clone())?.to_string();
 
-        let response = Fetch::get(url)?.html()?;
+        let response = Fetch::html(url)?;
 
         GenManga::chapter(&response)
     }
@@ -99,7 +99,7 @@ impl ListingProvider for Hip {
             return json::fetch_manga_list_json(url);
         }
 
-        let response = Fetch::get(url)?.html()?;
+        let response = Fetch::html(url)?;
 
         GenManga::list(&response)
     }

@@ -2,15 +2,13 @@ use aidoku::{
     Home, HomeComponent, HomeComponentValue, HomeLayout, HomePartialResult, Listing, ListingKind,
     Manga, Result,
     alloc::{Vec, string::ToString as _, vec},
-    imports::{
-        net::{RequestError, Response},
-        std::send_partial_result,
-    },
+    imports::std::send_partial_result,
+    prelude::*,
 };
 
 use crate::{
     Hip,
-    fetch::Fetch,
+    fetch::{Api, Fetch},
     html::GenManga,
     json,
     url::{FilterKind, Url},
@@ -53,78 +51,59 @@ impl Home for Hip {
             ],
         }));
 
-        let responses: [core::result::Result<Response, RequestError>; 6] = [
-            Fetch::get(
-                Url::Filter {
-                    kind: FilterKind::Path("popularity".to_string()),
-                    page: 1,
-                }
-                .to_string(),
-            )?
-            .send(),
-            Fetch::get(
-                Url::Filter {
-                    kind: FilterKind::Path("weekly".to_string()),
-                    page: 1,
-                }
-                .to_string(),
-            )?
-            .send(),
-            Fetch::get(
-                Url::Filter {
-                    kind: FilterKind::Category(1),
-                    page: 1,
-                }
-                .to_string(),
-            )?
-            .send(),
-            Fetch::get(
-                Url::Filter {
-                    kind: FilterKind::Category(2),
-                    page: 1,
-                }
-                .to_string(),
-            )?
-            .send(),
-            Fetch::get(
-                Url::Filter {
-                    kind: FilterKind::Category(3),
-                    page: 1,
-                }
-                .to_string(),
-            )?
-            .send(),
-            Fetch::get(
-                Url::Filter {
-                    kind: FilterKind::Status("ongoing".to_string()),
-                    page: 1,
-                }
-                .to_string(),
-            )?
-            .send(),
-        ];
+        // popularity/weekly 是 m.hipmh.com 的 HTML 頁（CDN 快取，直接請求即可）；
+        // 韓漫/陸漫/日漫/連載中是 hipapi1.s3file.top 的 JSON，要走 WebView（見 fetch.rs 的 `Api`）
+        let html_list = |path: &str| -> Result<Vec<Manga>> {
+            let url = Url::Filter {
+                kind: FilterKind::Path(path.to_string()),
+                page: 1,
+            }
+            .to_string();
 
-        // popularity/weekly 是 m.hipmh.com 的 HTML 頁；韓漫/陸漫/日漫/連載中是
-        // hipapi1.s3file.top 回的 JSON，兩種解析方式不一樣，不能套同一個 .map()
-        let [r_popularity, r_weekly, r_korean, r_mainland, r_japanese, r_ongoing] = responses;
+            Ok(Fetch::html(url)?.list()?.entries)
+        };
 
-        let popularity: Result<Vec<Manga>> = (|| Ok(r_popularity?.get_html()?.list()?.entries))();
-        let weekly: Result<Vec<Manga>> = (|| Ok(r_weekly?.get_html()?.list()?.entries))();
-        let korean: Result<Vec<Manga>> =
-            (|| Ok(json::parse_manga_list_json(r_korean?)?.entries))();
-        let mainland: Result<Vec<Manga>> =
-            (|| Ok(json::parse_manga_list_json(r_mainland?)?.entries))();
-        let japanese: Result<Vec<Manga>> =
-            (|| Ok(json::parse_manga_list_json(r_japanese?)?.entries))();
-        let ongoing: Result<Vec<Manga>> =
-            (|| Ok(json::parse_manga_list_json(r_ongoing?)?.entries))();
+        let popularity = html_list("popularity");
+        let weekly = html_list("weekly");
 
-        let popularity = popularity?;
-        let weekly = weekly?;
-        let korean = korean?;
-        let mainland = mainland?;
-        let japanese = japanese?;
-        let ongoing = ongoing?;
+        // 四個 JSON 分類共用一個 WebView；建不起來的話四個都算失敗
+        let api = Api::new();
+        let json_list = |kind: FilterKind| -> Result<Vec<Manga>> {
+            let Ok(api) = &api else {
+                bail!("WebView 建立失敗");
+            };
+            let url = Url::Filter { kind, page: 1 }.to_string();
+
+            Ok(json::fetch_manga_list_json_with(api, &url)?.entries)
+        };
+
+        let korean = json_list(FilterKind::Category(1));
+        let mainland = json_list(FilterKind::Category(2));
+        let japanese = json_list(FilterKind::Category(3));
+        let ongoing = json_list(FilterKind::Status("ongoing".to_string()));
+
+        // 六個分類裡有四個打的是 CF 後面的 hipapi1，驗證失效時會被擋（見 docs/RESEARCH.md 第十節）。
+        // 個別分類失敗只讓該分類消失就好，不要讓整個首頁跟著掛掉；但六個全滅時要把錯誤傳出去，
+        // 否則使用者只會看到一片空白的首頁，不知道發生什麼事。
+        let mut lists: [Vec<Manga>; 6] = Default::default();
+        let mut first_error = None;
+
+        let results = [popularity, weekly, korean, mainland, japanese, ongoing];
+
+        for (slot, result) in lists.iter_mut().zip(results) {
+            match result {
+                Ok(entries) => *slot = entries,
+                Err(error) => first_error = first_error.or(Some(error)),
+            }
+        }
+
+        if lists.iter().all(|list| list.is_empty())
+            && let Some(error) = first_error
+        {
+            return Err(error);
+        }
+
+        let [popularity, weekly, korean, mainland, japanese, ongoing] = lists;
 
         let mut components = Vec::new();
 

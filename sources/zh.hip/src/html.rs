@@ -7,7 +7,7 @@ use aidoku::{
 
 use crate::{
     decoder::{ChapterImagesResponse, decode_chapter_images, page_number_key},
-    fetch::Fetch,
+    fetch::{Api, Fetch},
     json::ChaptersApiResponse,
     settings,
     url::Url,
@@ -131,6 +131,8 @@ impl GenManga for Document {
             .attr("data-mid")
             .ok_or_else(|| error!("No mid found"))?;
 
+        let api = Api::new()?;
+
         let mut chapters: Vec<Chapter> = Vec::new();
         let mut page = 1;
 
@@ -142,7 +144,7 @@ impl GenManga for Document {
                 page
             );
 
-            let data: ChaptersApiResponse = Fetch::get(url)?.json_owned()?;
+            let data: ChaptersApiResponse = api.json(&url)?;
 
             if data.data.items.is_empty() {
                 break;
@@ -194,7 +196,7 @@ impl GenManga for Document {
 
         let url = format!("{}/v2/chapter?hid={}", settings::get_api_url(), api_hid);
 
-        let data: ChapterImagesResponse = Fetch::get(url)?.json_owned()?;
+        let data: ChapterImagesResponse = Api::new()?.json(&url)?;
 
         let paths = decode_chapter_images(&data.data.images)
             .ok_or_else(|| error!("Failed to decode chapter images"))?;

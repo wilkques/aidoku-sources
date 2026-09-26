@@ -238,3 +238,28 @@ fn test_search_parsing_offline() {
         Some("https://m.hipmh.com/works/bToyMzQ3NQ-yi-ren-zhi-xia-tencent-531490-17793")
     );
 }
+
+#[aidoku_test]
+fn test_cf_challenge_detection() {
+    use crate::fetch::is_cf_challenge;
+
+    // 實際被擋時的樣子（見 docs/RESEARCH.md 8.19 擷取的完整 header）
+    assert!(is_cf_challenge(403, Some("challenge")));
+
+    // header 值的大小寫不該影響判斷
+    assert!(is_cf_challenge(403, Some("Challenge")));
+
+    // 403 但不是 CF 擋的（例如站方自己的權限錯誤）要放行給原本的解析流程，
+    // 才不會把無關的錯誤都講成「Cloudflare 驗證中」
+    assert!(!is_cf_challenge(403, None));
+    assert!(!is_cf_challenge(403, Some("ban")));
+
+    // 503 也算，跟 host app 的 blockedStatusCodes = [403, 503] 一致
+    assert!(is_cf_challenge(503, Some("challenge")));
+
+    // 但成功的回應即使帶了 header 也不該誤判
+    assert!(!is_cf_challenge(200, Some("challenge")));
+
+    // 正常回應
+    assert!(!is_cf_challenge(200, None));
+}

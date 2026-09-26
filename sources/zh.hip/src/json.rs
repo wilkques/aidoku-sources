@@ -1,12 +1,11 @@
 use aidoku::{
     Manga, MangaPageResult, Result, Viewer,
     alloc::{String, Vec, string::ToString as _},
-    imports::net::Response,
     prelude::*,
 };
 use serde::Deserialize;
 
-use crate::{fetch::Fetch, settings, url::Url};
+use crate::{fetch::Api, settings, url::Url};
 
 // 章節列表不在 detail 頁的靜態 HTML 裡，是前端另外打 API 拿的
 // GET {api_url}/v1/manga/chapters?mid={mid}&page={page}&per_page={per_page}&order=desc
@@ -111,18 +110,16 @@ fn manga_list_from_api_data(data: MangaListApiData) -> MangaPageResult {
     build_manga_page_result(data.page, data.total_pages, data.items)
 }
 
-/// 用在已經 `.send()` 出去、還沒決定怎麼解析的 Response（例如 home.rs 平行發送的情況）
-pub(crate) fn parse_manga_list_json(response: Response) -> Result<MangaPageResult> {
-    let data: MangaListApiResponse = response.get_json_owned()?;
+/// 共用同一個 `Api`（例如 home.rs 一次要抓好幾個分類，不用每個都開一個 WebView）
+pub(crate) fn fetch_manga_list_json_with(api: &Api, url: &str) -> Result<MangaPageResult> {
+    let data: MangaListApiResponse = api.json(url)?;
 
     Ok(manga_list_from_api_data(data.data))
 }
 
 /// 用在單一 URL 直接 fetch + 解析的情況（ListingProvider）
 pub(crate) fn fetch_manga_list_json(url: String) -> Result<MangaPageResult> {
-    let data: MangaListApiResponse = Fetch::get(url)?.json_owned()?;
-
-    Ok(manga_list_from_api_data(data.data))
+    fetch_manga_list_json_with(&Api::new()?, &url)
 }
 
 /// 純字串版本，離線測試用，不打網路
@@ -172,7 +169,7 @@ fn search_list_from_api_data(data: SearchApiData) -> MangaPageResult {
 }
 
 pub(crate) fn fetch_search_json(url: String) -> Result<MangaPageResult> {
-    let data: SearchApiResponse = Fetch::get(url)?.json_owned()?;
+    let data: SearchApiResponse = Api::new()?.json(&url)?;
 
     Ok(search_list_from_api_data(data.data))
 }
