@@ -1,7 +1,10 @@
 use aidoku::{
     Chapter, Manga, MangaPageResult, MangaStatus, Page, PageContent, Result, Viewer,
     alloc::{String, Vec, string::ToString as _},
-    imports::{html::Document, std::current_date},
+    imports::{
+        html::{Document, Element},
+        std::current_date,
+    },
     prelude::*,
 };
 
@@ -37,19 +40,18 @@ impl GenManga for Document {
                 .unwrap_or_default()
                 .to_string();
 
-            let title = html_a_tag
-                .attr("title")
-                .ok_or_else(|| error!("No link found"))?
-                .to_string();
+            // 站方的 title 屬性被重複跳脫過（HTML 裡是 `&amp;amp;`），解析後還留著 `&amp;`
+            let title = decode_entities(
+                &html_a_tag
+                    .attr("title")
+                    .ok_or_else(|| error!("No link found"))?,
+            );
 
             let url = Url::book(id.clone())?.to_string();
 
             let cover = html_a_tag
                 .select_first("img")
-                .ok_or_else(|| error!("No cover found"))?
-                .attr("src")
-                .ok_or_else(|| error!("No style found"))?
-                .to_string();
+                .and_then(|img| image_url(&img));
 
             let viewer = match item
                 .select_first(".img-responsive")
@@ -64,7 +66,7 @@ impl GenManga for Document {
 
             mangas.push(Manga {
                 key: id,
-                cover: Some(cover),
+                cover,
                 title,
                 url: Some(url),
                 viewer,
@@ -211,27 +213,75 @@ impl GenManga for Document {
     }
 
     fn chapter(&self) -> Result<Vec<Page>> {
-        let mut pages: Vec<Page> = Vec::new();
-
-        let items = self
+        // 每頁結構是 `<div class="page-break" data-index="N"><img id="image-N" data-src=...>`，
+        // 後面再跟一個 `<noscript><img src=... class="mkjp-noscript"></noscript>` 備用圖（同一張）。
+        // 只抓有 `id="image-N"` 的那張，noscript 的沒有 id 會自動排除，否則每頁都會出現兩次。
+        // 網址屬性舊版是 `data-manga-src`、現在是 `data-src`，`image_url` 兩種都找。
+        let mut items: Vec<(i32, String)> = self
             .select("img[id^=image-]")
-            .ok_or_else(|| error!("No chapter img found"))?;
+            .map(|items| {
+                items
+                    .filter_map(|item| {
+                        let index = item
+                            .attr("id")?
+                            .trim_start_matches("image-")
+                            .parse::<i32>()
+                            .unwrap_or(i32::MAX);
+                        Some((index, image_url(&item)?))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
 
-        for item in items {
-            let href = item.attr("data-manga-src").unwrap_or_default();
+        // DOM 目前本來就依序排列；照 `image-N` 的編號排序，站方哪天打亂 DOM 順序也不受影響
+        items.sort_by_key(|(index, _)| *index);
 
-            if href.is_empty() {
+        let mut pages: Vec<Page> = Vec::new();
+        let mut seen: Vec<String> = Vec::new();
+
+        for (_, url) in items {
+            if seen.contains(&url) {
                 continue;
             }
-
-            let url = href.trim().to_string();
+            seen.push(url.clone());
 
             pages.push(Page {
                 content: PageContent::url(url),
                 ..Default::default()
-            })
+            });
         }
 
         Ok(pages)
     }
+}
+
+// WordPress（Madara 主題）常用 lazy-load：`src` 只是 `data:` 佔位圖，真正的網址放在
+// `data-src`／`data-lazy-src`／`srcset`（閱讀頁舊版是 `data-manga-src`）。依序找第一個
+// 像樣的 http(s) 網址。封面跟章節圖片共用。
+fn image_url(img: &Element) -> Option<String> {
+    let srcset_first = img.attr("data-srcset").or_else(|| img.attr("srcset")).and_then(|srcset| {
+        srcset
+            .split(',')
+            .next()
+            .and_then(|entry| entry.split_whitespace().next())
+            .map(|url| url.to_string())
+    });
+
+    ["data-manga-src", "data-src", "data-lazy-src", "data-original"]
+        .iter()
+        .filter_map(|name| img.attr(name))
+        .chain(srcset_first)
+        .chain(img.attr("src"))
+        .map(|url| url.trim().to_string())
+        .find(|url| url.starts_with("http") || url.starts_with("//"))
+}
+
+fn decode_entities(text: &str) -> String {
+    // `&amp;` 放最後，才不會把 `&amp;lt;` 這種字面文字多解一層
+    text.replace("&quot;", "\"")
+        .replace("&#039;", "'")
+        .replace("&#39;", "'")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&amp;", "&")
 }

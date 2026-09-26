@@ -2,13 +2,10 @@ use aidoku::{
     FilterValue, Home, HomeComponent, HomeComponentValue, HomeLayout, HomePartialResult, Listing,
     ListingKind, Manga, Result,
     alloc::{Vec, string::ToString as _, vec},
-    imports::{
-        net::{RequestError, Response},
-        std::send_partial_result,
-    },
+    imports::std::send_partial_result,
 };
 
-use crate::{Bakamh, fetch::Fetch, html::GenManga, url::Url};
+use crate::{Bakamh, fetch::Web, url::Url};
 
 impl Home for Bakamh {
     fn get_home(&self) -> Result<HomeLayout> {
@@ -37,70 +34,29 @@ impl Home for Bakamh {
             ],
         }));
 
-        let responses: [core::result::Result<Response, RequestError>; 4] = [
-            Fetch::get(
-                Url::filters(
-                    None,
-                    1,
-                    &vec![FilterValue::Sort {
-                        id: "排序".to_string(),
-                        index: 1,
-                        ascending: false,
-                    }],
-                )?
-                .to_string(),
-            )?
-            .send(),
-            Fetch::get(
-                Url::filters(
-                    None,
-                    1,
-                    &vec![FilterValue::Sort {
-                        id: "排序".to_string(),
-                        index: 2,
-                        ascending: false,
-                    }],
-                )?
-                .to_string(),
-            )?
-            .send(),
-            Fetch::get(
-                Url::filters(
-                    None,
-                    1,
-                    &vec![FilterValue::Sort {
-                        id: "排序".to_string(),
-                        index: 3,
-                        ascending: false,
-                    }],
-                )?
-                .to_string(),
-            )?
-            .send(),
-            Fetch::get(
-                Url::filters(
-                    None,
-                    1,
-                    &vec![FilterValue::Sort {
-                        id: "排序".to_string(),
-                        index: 4,
-                        ascending: false,
-                    }],
-                )?
-                .to_string(),
-            )?
-            .send(),
-        ];
+        // 四個分類共用同一個 WebView，依序抓（見 fetch.rs 的 `Web`）
+        let web = Web::new()?;
 
-        let results: [Result<Vec<Manga>>; 4] = responses
-            .map(|res| res?.get_html()?.list())
-            .map(|res| Ok(res?.entries));
+        let sort_list = |index: i32| -> Result<Vec<Manga>> {
+            let url = Url::filters(
+                None,
+                1,
+                &[FilterValue::Sort {
+                    id: "排序".to_string(),
+                    index,
+                    ascending: false,
+                }],
+            )?
+            .to_string();
 
-        let [dailymanga, rankmanga, viewmanga, newmanga] = results;
-        let dailymanga = dailymanga?;
-        let rankmanga = rankmanga?;
-        let viewmanga = viewmanga?;
-        let newmanga = newmanga?;
+            Ok(web.list(&url)?.entries)
+        };
+
+        // 依序抓、遇錯即停：被擋時第一個分類就會失敗，不用把四個都重試一輪才回報
+        let dailymanga = sort_list(1)?;
+        let rankmanga = sort_list(2)?;
+        let viewmanga = sort_list(3)?;
+        let newmanga = sort_list(4)?;
 
         let mut components = Vec::new();
 
