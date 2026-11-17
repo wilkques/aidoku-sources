@@ -10,7 +10,7 @@
 >    動態產生，網址跟著目前選的網域走。它開的視窗和來源的 `WebView` 共用同一個 per-source cookie store，
 >    所以使用者在這裡解出來的 `cf_clearance` 會存進來源自己的 store。
 > 2. **頁面**：`src/fetch.rs::Web` 用 `load_html_blocking` 把空白文件的網址設成目前的網域，再用 `eval`
->    發同源同步 XHR 抓 HTML。遇到 CF 挑戰時自動重試 3 次、每次間隔 1 秒，都失敗才提示使用者去設定頁。
+>    發同源同步 XHR 抓 HTML。遇到 CF 挑戰時直接提示使用者去設定頁（不自動重試：重試無實測證據，同一 cookie store 重打也不會變好）。
 > 3. **封面**：列表抓完後，用同一個 WebView 依序抓這一頁的封面，轉成 `data:` 網址直接放進 `Manga.cover`。
 > 4. **章節圖片**：`PageImageProcessor`。app 直接下載失敗時，閱讀器會把請求交給來源，來源改從 WebView
 >    重新抓圖，再用 `ImageRef::new` 交回去。

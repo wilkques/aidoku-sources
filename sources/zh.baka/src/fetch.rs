@@ -4,7 +4,6 @@ use aidoku::{
     imports::{
         html::{Document, Html},
         js::WebView,
-        std::sleep,
     },
     prelude::*,
 };
@@ -41,10 +40,6 @@ impl Fetch {
 pub struct Web {
     webview: WebView,
 }
-
-// 偶發被擋時先靜默重試，都失敗才叫使用者去設定頁。上限固定、間隔 1 秒：WebView 內
-// 無上限的輪詢曾讓 host app 崩潰重啟。
-const MAX_ATTEMPTS: u32 = 3;
 
 // `images()` 每張圖的結果：成功是 {t: content-type, d: base64}，失敗是 {e: 原因}
 #[derive(Deserialize)]
@@ -92,26 +87,14 @@ impl Web {
             url_literal
         );
 
-        let mut attempt = 1;
+        let result = self.request(&js)?;
 
-        let result = loop {
-            let result = self.request(&js)?;
-
-            if !is_cf_challenge(result.status, result.mitigated.as_deref()) {
-                break result;
-            }
-
-            if attempt >= MAX_ATTEMPTS {
-                bail!(
-                    "站方 Cloudflare 驗證已失效（已自動重試 {} 次）。請到 瀏覽 → 巴卡漫畫 → 齒輪 →「Cloudflare 驗證（{}）」完成驗證後再試",
-                    MAX_ATTEMPTS,
-                    settings::cf_host(&settings::get_base_url())
-                );
-            }
-
-            attempt += 1;
-            sleep(1);
-        };
+        if is_cf_challenge(result.status, result.mitigated.as_deref()) {
+            bail!(
+                "站方 Cloudflare 驗證已失效。請到 瀏覽 → 巴卡漫畫 → 齒輪 →「Cloudflare 驗證（{}）」完成驗證後再試",
+                settings::cf_host(&settings::get_base_url())
+            );
+        }
 
         if result.status != 200 {
             bail!("頁面請求失敗（HTTP {}）：{}", result.status, truncate(&result.body, 200));

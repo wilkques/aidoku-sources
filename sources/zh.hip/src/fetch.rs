@@ -74,8 +74,6 @@ pub struct Api {
     webview: WebView,
 }
 
-const MAX_ATTEMPTS: u32 = 3;
-
 // eval 回傳值只能是字串，所以在 JS 端把狀態碼、header 跟內容包成一個 JSON 帶回來
 #[derive(Deserialize)]
 struct XhrResult {
@@ -105,28 +103,11 @@ impl Api {
             url_literal
         );
 
-        // 偶發被擋時先靜默重試，都失敗才叫使用者去設定頁驗證。只有 CF 挑戰才重試，其他錯誤
-        // 重打也不會變好。上限固定、間隔 1 秒：WebView 內無上限的輪詢曾讓 host app 崩潰
-        // （zh.baka 的教訓）。沿用同一個 WebView 就好，重建也是同一個 cookie store。
-        let mut attempt = 1;
+        let result = self.request(&js)?;
 
-        let result = loop {
-            let result = self.request(&js)?;
-
-            if !is_cf_challenge(result.status, result.mitigated.as_deref()) {
-                break result;
-            }
-
-            if attempt >= MAX_ATTEMPTS {
-                bail!(
-                    "站方 Cloudflare 驗證已失效（已自動重試 {} 次）。請到 瀏覽 → 嬉皮 → 齒輪 →「Cloudflare 驗證」完成驗證後再試",
-                    MAX_ATTEMPTS
-                );
-            }
-
-            attempt += 1;
-            sleep(1);
-        };
+        if is_cf_challenge(result.status, result.mitigated.as_deref()) {
+            bail!("站方 Cloudflare 驗證已失效。請到 瀏覽 → 嬉皮 → 齒輪 →「Cloudflare 驗證」完成驗證後再試");
+        }
 
         if result.status != 200 {
             bail!("API 請求失敗（HTTP {}）：{}", result.status, truncate(&result.body, 200));
