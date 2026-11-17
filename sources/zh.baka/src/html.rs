@@ -204,11 +204,15 @@ impl GenManga for Document {
                     }
                 });
 
+            // 搶先閱讀 / 付費章節會多一個 `.mkjp-ea-badge` 標章，在列表上標成鎖定
+            let locked = item.select_first(".mkjp-ea-badge").is_some();
+
             chapters.push(Chapter {
                 key,
                 title,
                 url: Some(url),
                 date_uploaded,
+                locked,
                 ..Default::default()
             });
         }

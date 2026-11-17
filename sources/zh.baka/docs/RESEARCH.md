@@ -134,6 +134,26 @@ webView.evaluateJavaScript(wrappedScript) { _, error in
 
 2026-09-26 實機驗證：登入後，限登入的章節可以正常閱讀。
 
+**章節列表的鎖頭（2026-11-17，已實機驗證）**
+
+漫畫詳情頁的章節 `li.mkjp-chapter` 若是限登入／搶先閱讀，日期後面會多一個標章，跟 `<i>` 日期並列，**不在 `<a>` 裡面**：
+
+```html
+<li class="mkjp-chapter">
+  <a href=".../c-57/">第56话</a>
+  <span class="chapter-release-date">
+    <i>4 小时 前</i> <span class="mkjp-ea-badge">🔒 需登录</span>
+  </span>
+</li>
+```
+
+- 標章文字有兩種：`🔒 需登录`、`🔒 11月19日 02:00 解锁`（定時解鎖，時間到前也是鎖著）。
+- `html.rs::chapters()` 只看有沒有 `.mkjp-ea-badge`，有就把 `Chapter.locked` 設為 `true`（SDK 的 `Chapter` 有 `locked: bool`，
+  Aidoku 會在列表顯示鎖頭）。不用解析標章文字。
+- 標章不在 `<a>` 內，所以標題（`atag.text()`）不會混進標章文字；日期只讀 `.chapter-release-date i`，也不受影響。
+- 首頁／側邊欄的「隨機推薦」`.chapter-item .post-on` 也有同一個標章，但來源程式不解析那裡。
+- 沒驗證：登入後標章是否消失（拿到的樣本是未登入狀態）。定時解鎖的章節點進去也沒有圖，`chapter()` 的報錯目前只提示登入。
+
 ### 2.7 其他
 
 - 站方的 `title` 屬性被重複跳脫（HTML 裡是 `&amp;amp;`），解析後還留著 `&amp;`，用 `decode_entities` 再解一層。
