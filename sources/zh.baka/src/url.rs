@@ -137,7 +137,7 @@ impl Url {
                         1 => "latest".to_string(),
                         2 => "rating".to_string(),
                         3 => "views".to_string(),
-                        5 => "new-manga".to_string(),
+                        4 => "new-manga".to_string(),
                         _ => "".to_string(),
                     };
                 }

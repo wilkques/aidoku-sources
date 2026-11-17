@@ -2,11 +2,13 @@
   "info": {
     "id": "zh.baka",
     "name": "巴卡漫畫",
-    "version": 7,
+    "version": 8,
     "urls": [
       "https://bakamh.com",
       "https://bakamh.ru",
-      "https://baka3.me"
+      "https://baka1.cfd",
+      "https://baka2.cfd",
+      "https://baka3.cfd"
     ],
     "contentRating": 2,
     "languages": [

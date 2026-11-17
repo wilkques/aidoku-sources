@@ -21,13 +21,15 @@ impl GenManga for Document {
     fn list(&self) -> Result<MangaPageResult> {
         let mut mangas: Vec<Manga> = Vec::new();
 
+        // 站方改版後列表是 `<article class="mkjp-sr__item">`（封面 `.mkjp-sr__cover`、
+        // 標題 `.mkjp-sr__title > a`、分類 `.mkjp-sr__genre`）。
         let items = self
-            .select("#loop-content .c-image-hover")
+            .select("#loop-content .mkjp-sr__item")
             .ok_or_else(|| error!("No manga items found"))?;
 
         for item in items {
             let html_a_tag = item
-                .select_first("a")
+                .select_first(".mkjp-sr__title a")
                 .ok_or_else(|| error!("No link found"))?;
 
             let id = html_a_tag
@@ -40,23 +42,17 @@ impl GenManga for Document {
                 .unwrap_or_default()
                 .to_string();
 
-            // 站方的 title 屬性被重複跳脫過（HTML 裡是 `&amp;amp;`），解析後還留著 `&amp;`
-            let title = decode_entities(
-                &html_a_tag
-                    .attr("title")
-                    .ok_or_else(|| error!("No link found"))?,
-            );
+            let title = decode_entities(html_a_tag.text().unwrap_or_default().trim());
 
             let url = Url::book(id.clone())?.to_string();
 
-            let cover = html_a_tag
-                .select_first("img")
+            let cover = item
+                .select_first(".mkjp-sr__cover img")
                 .and_then(|img| image_url(&img));
 
             let viewer = match item
-                .select_first(".img-responsive")
-                .ok_or_else(|| error!("No viewer found"))?
-                .text()
+                .select_first(".mkjp-sr__genre")
+                .and_then(|genre| genre.text())
                 .unwrap_or_default()
                 .trim()
             {
@@ -90,7 +86,7 @@ impl GenManga for Document {
         manga.artists = Some(Vec::new());
 
         manga.description = Some(
-            self.select_first(".post-content_item:last-child > div > p")
+            self.select_first(".mkjp-summary__text")
                 .ok_or_else(|| error!("No description found"))?
                 .text()
                 .unwrap_or_default()
@@ -104,13 +100,21 @@ impl GenManga for Document {
                 .collect::<Vec<String>>()
         });
 
-        manga.status = match self
-            .select_first(".post-content_item:nth-last-of-type(2) > .summary-content")
-            .ok_or_else(|| error!("No status found"))?
-            .text()
-            .unwrap_or_default()
-            .trim()
-        {
+        // 狀態列沒有固定位置（前後會多出收藏、評論等項目），改用標題文字「状态」找
+        let status_text = self
+            .select(".post-content_item")
+            .and_then(|items| {
+                items
+                    .filter(|item| {
+                        item.select_first(".summary-heading")
+                            .and_then(|heading| heading.text())
+                            .is_some_and(|text| text.contains("状态"))
+                    })
+                    .find_map(|item| item.select_first(".summary-content")?.text())
+            })
+            .unwrap_or_default();
+
+        manga.status = match status_text.trim() {
             "连载中" => MangaStatus::Ongoing,
             "已完结" => MangaStatus::Completed,
             _ => MangaStatus::Unknown,
@@ -125,7 +129,7 @@ impl GenManga for Document {
         let mut chapters: Vec<Chapter> = Vec::new();
 
         let items = self
-            .select(".chapter-loveYou")
+            .select(".mkjp-chapter")
             .ok_or_else(|| error!("No chapter items found"))?;
 
         for item in items {
